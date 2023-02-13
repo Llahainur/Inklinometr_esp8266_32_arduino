@@ -32,7 +32,7 @@ IPAddress subnet(255,255,255,0);
 ESP8266WebServer server(80);
 MPU6050 mpu;
 
-namespace consts{
+namespace vals{
 
 Kalman kalmanX;
 Kalman kalmanY;
@@ -82,7 +82,7 @@ int16_t ax, ay, az;
 int16_t gx, gy, gz;
 }
 
-using namespace consts;
+using namespace vals;
 
 String SendHTML_onCalibration(float xA,float yA,float zA, float xG,float yG,float zG){
   String ptr = "<html><head><!DOCTYPE html><meta http-equiv='Refresh' content='3' /><meta charset=utf-8></head><body>";
