@@ -1,8 +1,33 @@
-//#define EXPERIMENTAL
-//#define AP
-#define IP 200
-#define CONNECT_TO_HOME
-const int count=1000;
+#define SERVER //Добавлять ли веб-сервер
+//or
+//#define MODBUS //Используем Модбас
+//or
+//#define CLIENT //Отправляем данные на веб сервер https://radioprog.ru/post/1119
+//доделать веб клиент
+
+
+
+#ifdef SERVER
+//#define EXPERIMENTAL //длинный html с автообновлением если включено
+#define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
+//or
+//#define WIFI_CLI //если датчик - клиент другой сети
+#endif
+
+const int count=1000;// количество измерений, от которых берется среднее
+
+#ifdef WIFI_ACP 
+#define IP 1 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
+#endif
+
+#ifndef WIFI_ACP 
+#define CONNECT_TO_HOME //подключить к домашней сети
+#define IP 200 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
+#endif
+
+#ifdef CLIENT
+const char* host = "192.168.1.1";
+#endif
 
 //#include "calibrate.h"
 //#define COMPL_K 0.05
@@ -12,9 +37,12 @@ const int count=1000;
 #include <Kalman.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include <ModbusRTU.h>
+#include <string>
+#include <ESP8266HTTPClient.h>
 
 #ifdef CONNECT_TO_HOME
-/* Установите здесь свои SSID и пароль */
+/* SSID и пароль домашней сети */
 const char* ssid = "Tenda";       // SSID
 const char* password = "Nikol1204Svet";  // пароль
 #endif
@@ -29,8 +57,16 @@ const char* password = "12345678";  // пароль
 IPAddress local_ip(192,168,1,IP);
 IPAddress gateway(192,168,1,1);
 IPAddress subnet(255,255,255,0);
+#ifdef SERVER
 ESP8266WebServer server(80);
+#endif
+
 MPU6050 mpu;
+
+#ifdef CLIENT
+WiFiClient client;
+int port = 80;
+#endif
 
 namespace vals{
 
@@ -147,8 +183,9 @@ void handle_onCalibrate() {
     mpu.setZGyroOffset(offsets[5] / 4);
     delay(2);
   }
+#ifdef SERVER
   server.send(200, "text/html", SendHTML_onCalibration(offsets[0] / 8, offsets[1] / 8,offsets[2]/8, offsets[3] / 4, offsets[4] / 4, offsets[5] / 4));
-  
+#endif
     // выводим в порт
     Serial.println("Calibration end. Your offsets:");
     Serial.println("accX accY accZ gyrX gyrY gyrZ");
@@ -164,30 +201,17 @@ void handle_onCalibrate() {
 
 #ifndef EXPERIMENTAL
 String SendHTML(float x,float y,float z, float dX, float dY, float dZ){
-  String ptr = "";//"<html><head><!DOCTYPE html><meta http-equiv='Refresh' content='3' /><meta charset=utf-8></head><body>";
-  //ptr+="x=  ";
+  String ptr ="";
+  //ptr+=IP;
+  ptr+="  ";
   ptr+=x;
   ptr+="  ";
-  //ptr+=" &deg; y=  ";
   ptr+=y;
   ptr+="  ";
-  //ptr+=" &deg; z= ";
   ptr+=z;
-  // ptr+="  ";
-//  //ptr+="dx=  ";
-//   ptr+=dX;
-//   ptr+="  ";
-//   //ptr+=" &deg; dy=  ";
-//   ptr+=dY;
-//   ptr+="  ";
-//   //ptr+=" &deg; dz= ";
-//   ptr+=dZ;
-
   ptr+="  ";
-  //ptr+=" &deg; <br> Номер измерения: ";
   ptr+=nomer_izmerenia;
-  ptr+=";";
-  //ptr+="</body></html>";
+  ptr+="";
   return ptr;
 }
 #endif
@@ -222,16 +246,19 @@ String SendHTML(float x,float y,float z, float dX, float dY, float dZ){
 }
 #endif
 
+#ifdef SERVER
 void handle_OnConnect(){
+  
   //Serial.write("connection");
-  if((timer-micros())/1000000>5){
+  if(not (avX==avY and avY==avZ and avZ==0)){
     server.send(200, "text/html", SendHTML(avX, avY, avZ, dX, dY, dZ));
   }
   else{
-  server.send(200, "text/plain", "Wait please");
+    server.send(200, "text/plain", "Loading...Wait for 30s");
   }
+  
 }
-
+#endif
 
 void setup() {
   Serial.begin(9600);
@@ -245,12 +272,12 @@ void setup() {
   kalmanZ.setAngle(180);
   timer = micros();
   
-#ifdef AP
+#ifdef WIFI_ACP
   WiFi.softAP(ssid, password);
   WiFi.softAPConfig(local_ip, gateway, subnet);
 #endif
 
-#ifndef AP
+#ifdef WIFI_CLI
   //WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   WiFi.config(local_ip, gateway, subnet);
@@ -266,13 +293,17 @@ void setup() {
   Serial.println(WiFi.localIP());
 #endif
 
-
   delay(100);
+
+#ifdef SERVER
   server.on("/", handle_OnConnect);
   server.on("/calibrate", handle_onCalibrate);
   //server.onNotFound(handle_NotFound);  
+  
   server.begin();
   Serial.println("HTTP server started");
+#endif
+
   mpu.setFullScaleAccelRange(3);//-2..2 g/s
   //mpu.setFullScaleAccelRange(0);//-16..16 g/s
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
@@ -327,7 +358,9 @@ void calculateAngles() {
 
 
 void loop() {
+  #ifdef SERVER
   server.handleClient();
+  #endif
   
   uint32_t looptime = micros();
   getValues();
@@ -362,6 +395,27 @@ void loop() {
     sumY=0;
     sumZ=0;
     i=0;
+
+  #ifdef CLIENT
+      WiFiClient client;
+      HTTPClient http;
+      String url = "https://192.168.1.1/params/";
+      url += "?avX=";
+      url += avX;
+      url += "?avY=";
+      url += avY;
+      url += "?avZ=";
+      url += avZ;      
+      // Your Domain name with URL path or IP address with path
+      http.begin(client, url.c_str());
+  
+      // If you need Node-RED/server authentication, insert user and password below
+      //http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
+        
+      // Send HTTP GET request
+      int httpResponseCode = http.GET();
+
+  #endif
   }
    
   delay(1); // The accelerometer's maximum samples rate is 1kHz
