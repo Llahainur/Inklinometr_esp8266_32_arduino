@@ -1,25 +1,38 @@
+//#define EXPERIMENTAL
+//#define AP
+#define IP 200
+#define CONNECT_TO_HOME
+const int count=1000;
+
+//#include "calibrate.h"
+//#define COMPL_K 0.05
 #include <Arduino.h>
 #include <MPU6050.h>
-//#include "calibrate.h"
-
-//#define COMPL_K 0.05
-#include <Wire.h> //добавить вычисление дисперсии
+#include <Wire.h> 
 #include <Kalman.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+
+#ifdef CONNECT_TO_HOME
+/* Установите здесь свои SSID и пароль */
+const char* ssid = "Tenda";       // SSID
+const char* password = "Nikol1204Svet";  // пароль
+#endif
+
+#ifndef CONNECT_TO_HOME
 /* Установите здесь свои SSID и пароль */
 const char* ssid = "NodeMCU";       // SSID
 const char* password = "12345678";  // пароль
-
-#define EXPERIMENTAL
-const int count=1000;
+#endif
 
 /* Настройки IP адреса */
-IPAddress local_ip(192,168,1,1);
+IPAddress local_ip(192,168,1,IP);
 IPAddress gateway(192,168,1,1);
 IPAddress subnet(255,255,255,0);
 ESP8266WebServer server(80);
 MPU6050 mpu;
+
+namespace consts{
 
 Kalman kalmanX;
 Kalman kalmanY;
@@ -67,6 +80,9 @@ int nomer_izmerenia = 0;
 #define BUFFER_SIZE 100
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
+}
+
+using namespace consts;
 
 String SendHTML_onCalibration(float xA,float yA,float zA, float xG,float yG,float zG){
   String ptr = "<html><head><!DOCTYPE html><meta http-equiv='Refresh' content='3' /><meta charset=utf-8></head><body>";
@@ -228,8 +244,29 @@ void setup() {
   kalmanY.setAngle(180);
   kalmanZ.setAngle(180);
   timer = micros();
+  
+#ifdef AP
   WiFi.softAP(ssid, password);
   WiFi.softAPConfig(local_ip, gateway, subnet);
+#endif
+
+#ifndef AP
+  //WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  WiFi.config(local_ip, gateway, subnet);
+  Serial.println(WiFi.localIP()); 
+    while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+#endif
+
+
   delay(100);
   server.on("/", handle_OnConnect);
   server.on("/calibrate", handle_onCalibrate);
@@ -237,7 +274,7 @@ void setup() {
   server.begin();
   Serial.println("HTTP server started");
   mpu.setFullScaleAccelRange(3);//-2..2 g/s
-  //mpu.setFullScaleAccelRange(0);//-2..2 g/s
+  //mpu.setFullScaleAccelRange(0);//-16..16 g/s
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
   //
 }
@@ -264,7 +301,7 @@ void calculateAngles() {
   accZangle = (atan2(accX, accY) + PI) * RAD_TO_DEG;
   accYangle = (atan2(accX, accZ) + PI) * RAD_TO_DEG;
   accXangle = (atan2(accY, accZ) + PI) * RAD_TO_DEG;
-  float gyroXrate = ((float)gyroX / 32768 * 250.0);
+  float gyroXrate = ((float)gyroX / 32768 * 250.0);//попробовать увеличить диапазон, как следстствие уменьшить ошибку шума
   float gyroYrate = ((float)gyroY / 32768 * 250.0);
   float gyroZrate = ((float)gyroZ / 32768 * 250.0);
   // Calculate gyro angle without any filter
