@@ -29,20 +29,18 @@ const int count=1000;// количество измерений, от котор
 const char* host = "192.168.1.1";
 #endif
 
-//#include "calibrate.h"
-//#define COMPL_K 0.05
+
 #include <Arduino.h>
 #include <MPU6050.h>
 #include <Wire.h> 
 #include <Kalman.h>
 #include <ESP8266WiFi.h>
-#include "constants.h"
-
 #include <ModbusRTU.h>
 #include <string>
 
-#include "server_html.h"
 
+#include "server_html.h"
+#include "constants.h"
 
 #ifdef CONNECT_TO_HOME
 /* SSID и пароль домашней сети */
@@ -60,6 +58,7 @@ const char* password = "12345678";  // пароль
 IPAddress local_ip(192,168,1,IP);
 IPAddress gateway(192,168,1,1);
 IPAddress subnet(255,255,255,0);
+
 #ifdef SERVER
 ESP8266WebServer server(80);
 #endif
@@ -222,6 +221,7 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
+  WiFi.setAutoReconnect(true)
   Serial.println("");
   Serial.print("Connected to ");
   Serial.println(ssid);
@@ -339,7 +339,10 @@ void loop() {
 
   #endif
   }
-   
+
+  #ifdef WIFI_CLI
+  WiFi.
+  #endif
   delay(1); // The accelerometer's maximum samples rate is 1kHz
 }
 
