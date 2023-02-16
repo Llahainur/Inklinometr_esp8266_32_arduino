@@ -1,14 +1,11 @@
 #define SERVER //Добавлять ли веб-сервер
 //or
-//#define MODBUS //Используем Модбас
-//or
-//#define CLIENT //Отправляем данные на веб сервер https://radioprog.ru/post/1119
+//#define CLIENT //Отправляем данные на веб сервер (https://radioprog.ru/post/1119), не реализовано
 //доделать веб клиент
-
-
+//or
+//#define MODBUS //Используем Модбас, не реализовано
 
 #ifdef SERVER
-//#define EXPERIMENTAL //длинный html с автообновлением если включено
 #define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
 //or
 //#define WIFI_CLI //если датчик - клиент другой сети
@@ -16,19 +13,18 @@
 
 const int count=1000;// количество измерений, от которых берется среднее
 
-#ifdef WIFI_ACP 
-#define IP 1 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
-#endif
-
 #ifndef WIFI_ACP 
 #define CONNECT_TO_HOME //подключить к домашней сети
 #define IP 200 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
 #endif
 
+#ifdef WIFI_ACP 
+#define IP 1 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
+#endif
+
 #ifdef CLIENT
 const char* host = "192.168.1.1";
 #endif
-
 
 #include <Arduino.h>
 #include <MPU6050.h>
