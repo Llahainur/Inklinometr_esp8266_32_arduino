@@ -37,7 +37,7 @@ const char* host = "192.168.1.1";
 #include <Kalman.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <ModbusRTU.h>
+//#include <ModbusRTU.h>
 #include <string>
 #include <ESP8266HTTPClient.h>
 
