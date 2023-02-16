@@ -36,10 +36,13 @@ const char* host = "192.168.1.1";
 #include <Wire.h> 
 #include <Kalman.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-//#include <ModbusRTU.h>
+#include "constants.h"
+
+#include <ModbusRTU.h>
 #include <string>
-#include <ESP8266HTTPClient.h>
+
+#include "server_html.h"
+
 
 #ifdef CONNECT_TO_HOME
 /* SSID и пароль домашней сети */
@@ -69,7 +72,6 @@ int port = 80;
 #endif
 
 namespace vals{
-
 Kalman kalmanX;
 Kalman kalmanY;
 Kalman kalmanZ;
@@ -119,24 +121,6 @@ int16_t gx, gy, gz;
 }
 
 using namespace vals;
-
-String SendHTML_onCalibration(float xA,float yA,float zA, float xG,float yG,float zG){
-  String ptr = "<html><head><!DOCTYPE html><meta http-equiv='Refresh' content='3' /><meta charset=utf-8></head><body>";
-  ptr+="xA=  ";
-  ptr+=xA;
-  ptr+=" &deg; yA=  ";
-  ptr+=yA;
-  ptr+=" &deg; zA= ";
-  ptr+=zA;
-  ptr+="xG=  ";
-  ptr+=xG;
-  ptr+=" &deg; yG=  ";
-  ptr+=yG;
-  ptr+=" &deg; zG= ";
-  ptr+=zG;
-  ptr+="</body></html>";
-  return ptr;
-}
 
 // ======= ФУНКЦИЯ КАЛИБРОВКИ =======
 void handle_onCalibrate() {
@@ -199,64 +183,16 @@ void handle_onCalibrate() {
 
 }
 
-#ifndef EXPERIMENTAL
-String SendHTML(float x,float y,float z, float dX, float dY, float dZ){
-  String ptr ="";
-  //ptr+=IP;
-  ptr+="  ";
-  ptr+=x;
-  ptr+="  ";
-  ptr+=y;
-  ptr+="  ";
-  ptr+=z;
-  ptr+="  ";
-  ptr+=nomer_izmerenia;
-  ptr+="";
-  return ptr;
-}
-#endif
-
-#ifdef EXPERIMENTAL
-String SendHTML(float x,float y,float z, float dX, float dY, float dZ){
-  String ptr = "<html><head><!DOCTYPE html><meta http-equiv='Refresh' content='1' /><meta charset=utf-8></head><body>";
-  ptr+="x=  ";
-  ptr+=x;
-  ptr+="  ";
-  ptr+=" &deg; y=  ";
-  ptr+=y;
-  ptr+="  ";
-  ptr+=" &deg; z= ";
-  ptr+=z;
-   ptr+="  ";
-//  //ptr+="dx=  ";
-//   ptr+=dX;
-//   ptr+="  ";
-//   //ptr+=" &deg; dy=  ";
-//   ptr+=dY;
-//   ptr+="  ";
-//   //ptr+=" &deg; dz= ";
-//   ptr+=dZ;
-
-  //ptr+="  ";
-  ptr+=" &deg; <br> Номер измерения: ";
-  ptr+=nomer_izmerenia;
-  ptr+=";";
-  ptr+="</body></html>";
-  return ptr;
-}
-#endif
 
 #ifdef SERVER
 void handle_OnConnect(){
-  
   //Serial.write("connection");
   if(not (avX==avY and avY==avZ and avZ==0)){
-    server.send(200, "text/html", SendHTML(avX, avY, avZ, dX, dY, dZ));
+    server.send(200, "text/html", SendHTML(avX, avY, avZ, dX, dY, dZ, nomer_izmerenia));
   }
   else{
     server.send(200, "text/plain", "Loading...Wait for 30s");
   }
-  
 }
 #endif
 
@@ -305,9 +241,8 @@ void setup() {
 #endif
 
   mpu.setFullScaleAccelRange(3);//-2..2 g/s
-  //mpu.setFullScaleAccelRange(0);//-16..16 g/s
+  //mpu.setFullScaleAccelRange(0);//-16..16 g/s // вернуть, если что-то с погрешностью пойдет не так
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
-  //
 }
 
 
@@ -339,16 +274,6 @@ void calculateAngles() {
   gyroXangle += gyroXrate * ((float)(micros() - timer) / 1000000);
   gyroYangle += gyroYrate * ((float)(micros() - timer) / 1000000);
   gyroZangle += gyroZrate * ((float)(micros() - timer) / 1000000);
-  
-    // Calculate gyro angle using the unbiased rate
-    // gyroXangle += kalmanX.getRate() * ((float)(micros() - timer) / 1000000);
-    // gyroYangle += kalmanY.getRate() * ((float)(micros() - timer) / 1000000);
-    // Calculate the angle using a Complimentary filter
-    // compAngleX = ((float)(1 - COMPL_K) * (compAngleX + (gyroXrate * (float)(micros() - timer) / 1000000))) + (COMPL_K * accXangle);
-    // compAngleY = ((float)(1 - COMPL_K) * (compAngleY + (gyroYrate * (float)(micros() - timer) / 1000000))) + (COMPL_K * accYangle);
-    // compAngleZ = ((float)(1 - COMPL_K) * (compAngleZ + (gyroZrate * (float)(micros() - timer) / 1000000))) + (COMPL_K * accZangle);
-  
-  // Calculate the angle using a Kalman filter
   kalAngleX = kalmanX.getAngle(accXangle, gyroXrate, (float)(micros() - timer) / 1000000);
   kalAngleY = kalmanY.getAngle(accYangle, gyroYrate, (float)(micros() - timer) / 1000000);
   kalAngleZ = kalmanZ.getAngle(accZangle, gyroZrate, (float)(micros() - timer) / 1000000);
@@ -388,9 +313,6 @@ void loop() {
     dX = dsX/count;
     dY = dsY/count;
     dZ = dsZ/count;
-    // Serial.print(avX); Serial.print(" "); 
-    // Serial.print(avY); Serial.print(" "); 
-    // Serial.print(avZ); Serial.println();
     sumX=0;
     sumY=0;
     sumZ=0;
