@@ -32,11 +32,11 @@ const char* host = "192.168.1.1";
 #include <Kalman.h>
 #include <ESP8266WiFi.h>
 #include <ModbusRTU.h>
-#include <string>
 
+#include <server_html.h>
+#include <inklin_logic.h>
 
-#include "server_html.h"
-#include "constants.h"
+uint8_t IMUAddress = 0x68;
 
 #ifdef CONNECT_TO_HOME
 /* SSID и пароль домашней сети */
@@ -70,7 +70,6 @@ namespace vals{
 Kalman kalmanX;
 Kalman kalmanY;
 Kalman kalmanZ;
-uint8_t IMUAddress = 0x68;
 
 /* IMU Data */
 int16_t accX;
@@ -110,11 +109,12 @@ float dsZ;
 int i=0;
 int nomer_izmerenia = 0;
 
-#define BUFFER_SIZE 100
+
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
 }
 
+#define BUFFER_SIZE 100
 using namespace vals;
 
 // ======= ФУНКЦИЯ КАЛИБРОВКИ =======
@@ -191,6 +191,25 @@ void handle_OnConnect(){
 }
 #endif
 
+void calculateAngles() {
+  /* Calculate the angls based on the different sensors and algorithm */
+  accZangle = (atan2(accX, accY) + PI) * RAD_TO_DEG;
+  accYangle = (atan2(accX, accZ) + PI) * RAD_TO_DEG;
+  accXangle = (atan2(accY, accZ) + PI) * RAD_TO_DEG;
+  float gyroXrate = ((float)gyroX / 32768 * 250.0);//попробовать увеличить диапазон, как следстствие уменьшить ошибку шума
+  float gyroYrate = ((float)gyroY / 32768 * 250.0);
+  float gyroZrate = ((float)gyroZ / 32768 * 250.0);
+  // Calculate gyro angle without any filter
+  gyroXangle += gyroXrate * ((float)(micros() - timer) / 1000000);
+  gyroYangle += gyroYrate * ((float)(micros() - timer) / 1000000);
+  gyroZangle += gyroZrate * ((float)(micros() - timer) / 1000000);
+  kalAngleX = kalmanX.getAngle(accXangle, gyroXrate, (float)(micros() - timer) / 1000000);
+  kalAngleY = kalmanY.getAngle(accYangle, gyroYrate, (float)(micros() - timer) / 1000000);
+  kalAngleZ = kalmanZ.getAngle(accZangle, gyroZrate, (float)(micros() - timer) / 1000000);
+  
+  timer = micros();
+}
+
 void setup() {
   Serial.begin(9600);
   Wire.begin();
@@ -241,50 +260,13 @@ void setup() {
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
 }
 
-
-void getValues() {
-  /* Update all the values */
-  Wire.beginTransmission(IMUAddress);
-  Wire.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
-  Wire.endTransmission(false);
-  Wire.requestFrom(IMUAddress, 14, true); // request a total of 14 registers
-  accX = Wire.read() << 8 | Wire.read(); // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
-  accY = Wire.read() << 8 | Wire.read(); // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
-  accZ = Wire.read() << 8 | Wire.read(); // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
-  tempRaw = Wire.read() << 8 | Wire.read(); // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
-  gyroX = Wire.read() << 8 | Wire.read(); // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
-  gyroY = Wire.read() << 8 | Wire.read(); // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
-  gyroZ = Wire.read() << 8 | Wire.read(); // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
-  temp = ((float)tempRaw + 12412.0) / 340.0;
-}
-
-void calculateAngles() {
-  /* Calculate the angls based on the different sensors and algorithm */
-  accZangle = (atan2(accX, accY) + PI) * RAD_TO_DEG;
-  accYangle = (atan2(accX, accZ) + PI) * RAD_TO_DEG;
-  accXangle = (atan2(accY, accZ) + PI) * RAD_TO_DEG;
-  float gyroXrate = ((float)gyroX / 32768 * 250.0);//попробовать увеличить диапазон, как следстствие уменьшить ошибку шума
-  float gyroYrate = ((float)gyroY / 32768 * 250.0);
-  float gyroZrate = ((float)gyroZ / 32768 * 250.0);
-  // Calculate gyro angle without any filter
-  gyroXangle += gyroXrate * ((float)(micros() - timer) / 1000000);
-  gyroYangle += gyroYrate * ((float)(micros() - timer) / 1000000);
-  gyroZangle += gyroZrate * ((float)(micros() - timer) / 1000000);
-  kalAngleX = kalmanX.getAngle(accXangle, gyroXrate, (float)(micros() - timer) / 1000000);
-  kalAngleY = kalmanY.getAngle(accYangle, gyroYrate, (float)(micros() - timer) / 1000000);
-  kalAngleZ = kalmanZ.getAngle(accZangle, gyroZrate, (float)(micros() - timer) / 1000000);
-  
-  timer = micros();
-}
-
-
 void loop() {
   #ifdef SERVER
   server.handleClient();
   #endif
   
   uint32_t looptime = micros();
-  getValues();
+  getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
   calculateAngles();
   // Serial.println(micros() - looptime);
   Serial.print(kalAngleX,4); Serial.print(" ");
