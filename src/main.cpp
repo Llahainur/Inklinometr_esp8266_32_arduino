@@ -6,9 +6,9 @@
 //#define MODBUS //Используем Модбас, не реализовано
 
 #ifdef SERVER
-#define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
+//#define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
 //or
-//#define WIFI_CLI //если датчик - клиент другой сети
+#define WIFI_CLI //если датчик - клиент другой сети
 #endif
 
 const int count=1000;// количество измерений, от которых берется среднее
@@ -27,7 +27,6 @@ const char* host = "192.168.1.1";
 #endif
 
 #include <Arduino.h>
-#include <MPU6050.h>
 #include <Wire.h> 
 #include <Kalman.h>
 #include <ESP8266WiFi.h>
@@ -35,6 +34,8 @@ const char* host = "192.168.1.1";
 
 #include <server_html.h>
 #include <inklin_logic.h>
+
+MPU6050 mpu;
 
 uint8_t IMUAddress = 0x68;
 
@@ -55,11 +56,16 @@ IPAddress local_ip(192,168,1,IP);
 IPAddress gateway(192,168,1,1);
 IPAddress subnet(255,255,255,0);
 
+Kalman kalmanX;
+Kalman kalmanY;
+Kalman kalmanZ;
+
+
 #ifdef SERVER
 ESP8266WebServer server(80);
 #endif
 
-MPU6050 mpu;
+
 
 #ifdef CLIENT
 WiFiClient client;
@@ -67,9 +73,7 @@ int port = 80;
 #endif
 
 namespace vals{
-Kalman kalmanX;
-Kalman kalmanY;
-Kalman kalmanZ;
+
 
 /* IMU Data */
 int16_t accX;
@@ -114,69 +118,13 @@ int16_t ax, ay, az;
 int16_t gx, gy, gz;
 }
 
-#define BUFFER_SIZE 100
 using namespace vals;
+
 
 // ======= ФУНКЦИЯ КАЛИБРОВКИ =======
 void handle_onCalibrate() {
-  long offsets[6];
-  long offsetsOld[6];
-  int16_t mpuGet[6];
-
-  // используем стандартную точность
-  mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
-  mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_250);
-
-  // обнуляем оффсеты
-  mpu.setXAccelOffset(0);
-  mpu.setYAccelOffset(0);
-  mpu.setZAccelOffset(0);
-  mpu.setXGyroOffset(0);
-  mpu.setYGyroOffset(0);
-  mpu.setZGyroOffset(0);
-  delay(10);
-  Serial.println("Calibration start. It will take about 5 seconds");
-  for (byte n = 0; n < 10; n++) {     // 10 итераций калибровки
-    for (byte j = 0; j < 6; j++) {    // обнуляем калибровочный массив
-      offsets[j] = 0;
-    }
-    for (byte i = 0; i < 100 + BUFFER_SIZE; i++) { // делаем BUFFER_SIZE измерений для усреднения
-      mpu.getMotion6(&mpuGet[0], &mpuGet[1], &mpuGet[2], &mpuGet[3], &mpuGet[4], &mpuGet[5]);
-      if (i >= 99) {                         // пропускаем первые 99 измерений
-        for (byte j = 0; j < 6; j++) {
-          offsets[j] += (long)mpuGet[j];   // записываем в калибровочный массив
-        }
-      }
-    }
-    for (byte i = 0; i < 6; i++) {
-      offsets[i] = offsetsOld[i] - ((long)offsets[i] / BUFFER_SIZE); // учитываем предыдущую калибровку
-      if (i == 2) offsets[i] += 16384;                               // если ось Z, калибруем в 16384
-      offsetsOld[i] = offsets[i];
-    }
-    // ставим новые оффсеты
-    mpu.setXAccelOffset(offsets[0] / 8);
-    mpu.setYAccelOffset(offsets[1] / 8);
-    mpu.setZAccelOffset(offsets[2] / 8);
-    mpu.setXGyroOffset(offsets[3] / 4);
-    mpu.setYGyroOffset(offsets[4] / 4);
-    mpu.setZGyroOffset(offsets[5] / 4);
-    delay(2);
+  Calibrate(mpu);
   }
-#ifdef SERVER
-  server.send(200, "text/html", SendHTML_onCalibration(offsets[0] / 8, offsets[1] / 8,offsets[2]/8, offsets[3] / 4, offsets[4] / 4, offsets[5] / 4));
-#endif
-    // выводим в порт
-    Serial.println("Calibration end. Your offsets:");
-    Serial.println("accX accY accZ gyrX gyrY gyrZ");
-    Serial.print(mpu.getXAccelOffset()); Serial.print(", ");
-    Serial.print(mpu.getYAccelOffset()); Serial.print(", ");
-    Serial.print(mpu.getZAccelOffset()); Serial.print(", ");
-    Serial.print(mpu.getXGyroOffset()); Serial.print(", ");
-    Serial.print(mpu.getYGyroOffset()); Serial.print(", ");
-    Serial.print(mpu.getZGyroOffset()); Serial.println(" ");
-    Serial.println(" ");
-
-}
 
 
 #ifdef SERVER
@@ -190,25 +138,6 @@ void handle_OnConnect(){
   }
 }
 #endif
-
-void calculateAngles() {
-  /* Calculate the angls based on the different sensors and algorithm */
-  accZangle = (atan2(accX, accY) + PI) * RAD_TO_DEG;
-  accYangle = (atan2(accX, accZ) + PI) * RAD_TO_DEG;
-  accXangle = (atan2(accY, accZ) + PI) * RAD_TO_DEG;
-  float gyroXrate = ((float)gyroX / 32768 * 250.0);//попробовать увеличить диапазон, как следстствие уменьшить ошибку шума
-  float gyroYrate = ((float)gyroY / 32768 * 250.0);
-  float gyroZrate = ((float)gyroZ / 32768 * 250.0);
-  // Calculate gyro angle without any filter
-  gyroXangle += gyroXrate * ((float)(micros() - timer) / 1000000);
-  gyroYangle += gyroYrate * ((float)(micros() - timer) / 1000000);
-  gyroZangle += gyroZrate * ((float)(micros() - timer) / 1000000);
-  kalAngleX = kalmanX.getAngle(accXangle, gyroXrate, (float)(micros() - timer) / 1000000);
-  kalAngleY = kalmanY.getAngle(accYangle, gyroYrate, (float)(micros() - timer) / 1000000);
-  kalAngleZ = kalmanZ.getAngle(accZangle, gyroZrate, (float)(micros() - timer) / 1000000);
-  
-  timer = micros();
-}
 
 void setup() {
   Serial.begin(9600);
@@ -236,7 +165,7 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  WiFi.setAutoReconnect(true)
+  WiFi.setAutoReconnect(true);
   Serial.println("");
   Serial.print("Connected to ");
   Serial.println(ssid);
@@ -267,7 +196,8 @@ void loop() {
   
   uint32_t looptime = micros();
   getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
-  calculateAngles();
+  calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
+gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
   // Serial.println(micros() - looptime);
   Serial.print(kalAngleX,4); Serial.print(" ");
   Serial.print(kalAngleY,4); Serial.print(" ");
@@ -318,9 +248,9 @@ void loop() {
   #endif
   }
 
-  #ifdef WIFI_CLI
-  WiFi.
-  #endif
+  // #ifdef WIFI_CLI
+  // WiFi.
+  // #endif
   delay(1); // The accelerometer's maximum samples rate is 1kHz
 }
 
