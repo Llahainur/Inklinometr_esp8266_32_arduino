@@ -6,9 +6,9 @@
 //#define MODBUS //Используем Модбас, не реализовано
 
 #ifdef SERVER
-//#define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
+#define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
 //or
-#define WIFI_CLI //если датчик - клиент другой сети
+//#define WIFI_CLI //если датчик - клиент другой сети
 #endif
 
 const int count=1000;// количество измерений, от которых берется среднее
@@ -30,7 +30,7 @@ const char* host = "192.168.1.1";
 #include <Wire.h> 
 #include <Kalman.h>
 #include <ESP8266WiFi.h>
-#include <ModbusRTU.h>
+#include <ModbusRTU.h>//если i2cdev как-то обновится и вылезет ошибка min исправляется заменой uint8 на int
 
 #include <server_html.h>
 #include <inklin_logic.h>
