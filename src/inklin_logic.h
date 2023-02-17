@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <Kalman.h>
 #include <MPU6050.h>
-
+#include <math.h>
 
 #define BUFFER_SIZE 100
 

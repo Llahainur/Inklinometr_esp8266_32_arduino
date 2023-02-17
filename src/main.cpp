@@ -60,7 +60,7 @@ Kalman kalmanX;
 Kalman kalmanY;
 Kalman kalmanZ;
 
-
+float Q_bias = 0.01f;
 #ifdef SERVER
 ESP8266WebServer server(80);
 #endif
@@ -131,7 +131,7 @@ void handle_onCalibrate() {
 void handle_OnConnect(){
   //Serial.write("connection");
   if(not (avX==avY and avY==avZ and avZ==0)){
-    server.send(200, "text/html", SendHTML(avX, avY, avZ, dX, dY, dZ, nomer_izmerenia));
+    server.send(200, "text/html", SendHTML(avX, avY, avZ, dX, dY, dZ, nomer_izmerenia,timer/1000000));
   }
   else{
     server.send(200, "text/plain", "Loading...Wait for 30s");
@@ -149,6 +149,10 @@ void setup() {
   kalmanX.setAngle(180); // Set starting angle
   kalmanY.setAngle(180);
   kalmanZ.setAngle(180);
+  kalmanX.setQbias(Q_bias);
+  kalmanY.setQbias(Q_bias);
+  kalmanZ.setQbias(Q_bias);
+  
   timer = micros();
   
 #ifdef WIFI_ACP

@@ -19,7 +19,7 @@ String SendHTML_onCalibration(float xA,float yA,float zA, float xG,float yG,floa
 }
 
 #ifndef EXPERIMENTAL
-String SendHTML(float x,float y,float z, float dX, float dY, float dZ, int nomer_izmerenia){
+String SendHTML(float x,float y,float z, float dX, float dY, float dZ, int nomer_izmerenia, int timer){
   String ptr ="";
   //ptr+=IP;
   ptr+="  ";
@@ -30,6 +30,8 @@ String SendHTML(float x,float y,float z, float dX, float dY, float dZ, int nomer
   ptr+=z;
   ptr+="  ";
   ptr+=nomer_izmerenia;
+  ptr+="  ";
+  ptr+=timer;
   ptr+="";
   return ptr;
 }
