@@ -23,15 +23,15 @@ String SendHTML(float x,float y,float z, float dX, float dY, float dZ, int nomer
   String ptr ="";
   //ptr+=IP;
   ptr+="  ";
+  ptr+=timer;
+  //   ptr+="  ";
+  // ptr+=nomer_izmerenia;
+  ptr+="  ";
   ptr+=x;
   ptr+="  ";
   ptr+=y;
   ptr+="  ";
   ptr+=z;
-  ptr+="  ";
-  ptr+=nomer_izmerenia;
-  ptr+="  ";
-  ptr+=timer;
   ptr+="";
   return ptr;
 }
