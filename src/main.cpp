@@ -6,16 +6,16 @@
 //#define MODBUS //Используем Модбас, не реализовано
 
 #ifdef SERVER
-#define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
+//#define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
 //or
-//#define WIFI_CLI //если датчик - клиент другой сети
+#define WIFI_CLI //если датчик - клиент другой сети
 #endif
 
 const int count=1000;// количество измерений, от которых берется среднее
 
 #ifndef WIFI_ACP 
-#define CONNECT_TO_HOME //подключить к домашней сети
-#define IP 200 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
+//#define CONNECT_TO_HOME //подключить к домашней сети
+#define IP 2 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
 #endif
 
 #ifdef WIFI_ACP 
