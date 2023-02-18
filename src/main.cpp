@@ -30,7 +30,7 @@ const char* host = "192.168.1.1";
 #include <Wire.h> 
 #include <Kalman.h>
 #include <ESP8266WiFi.h>
-#include <ModbusRTU.h>//если i2cdev как-то обновится и вылезет ошибка min исправляется заменой uint8 на int
+// #include <ModbusRTU.h>//если i2cdev как-то обновится и вылезет ошибка min исправляется заменой uint8 на int
 
 #include <server_html.h>
 #include <inklin_logic.h>
