@@ -61,7 +61,7 @@ Kalman kalmanZ;
 
 float Q_bias = 0.01f;
 #ifdef SERVER
-ESP8266WebServer server(80);
+ESP32WebServer server(80);
 #endif
 
 

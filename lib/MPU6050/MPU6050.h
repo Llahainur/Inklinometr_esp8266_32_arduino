@@ -430,6 +430,7 @@ THE SOFTWARE.
 #define MPU6050_DMP_MEMORY_BANKS        8
 #define MPU6050_DMP_MEMORY_BANK_SIZE    256
 #define MPU6050_DMP_MEMORY_CHUNK_SIZE   16
+#define BUFFER_LENGTH 100//добавил случайным образом, может вызвать лажу!!
 
 // note: DMP code memory blocks defined at end of header file
 
