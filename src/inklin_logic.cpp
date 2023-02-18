@@ -1,6 +1,5 @@
 #include "inklin_logic.h"
 
-
 void getValues(
 int16_t &accX,
 int16_t &accY,
