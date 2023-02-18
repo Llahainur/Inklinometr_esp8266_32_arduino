@@ -10,5 +10,4 @@
 
 String SendHTML_onCalibration(float xA,float yA,float zA, float xG,float yG,float zG);
 
-String SendHTML(float x,float y,float z, float dX, float dY, float dZ, int nomer_izmerenia, int timer, float noizeX,
-float noizeY, float noizeZ, float temp);
+String SendHTML(float x,float y,float z, float dX, float dY, float dZ, int nomer_izmerenia, int timer);
