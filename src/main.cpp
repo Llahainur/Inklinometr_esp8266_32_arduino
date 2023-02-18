@@ -14,8 +14,8 @@
 const int count=1000;// количество измерений, от которых берется среднее
 
 #ifndef WIFI_ACP 
-#define CONNECT_TO_HOME //подключить к домашней сети
-#define IP 200 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
+//#define CONNECT_TO_HOME //подключить к домашней сети
+#define IP 2 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
 #endif
 
 #ifdef WIFI_ACP 
@@ -29,7 +29,12 @@ const char* host = "192.168.1.1";
 #include <Arduino.h>
 #include <Wire.h> 
 #include <Kalman.h>
+<<<<<<< HEAD
 #include <WiFi.h>
+=======
+#include <ESP8266WiFi.h>
+// #include <ModbusRTU.h>//если i2cdev как-то обновится и вылезет ошибка min исправляется заменой uint8 на int
+>>>>>>> html_change
 
 #include <server_html.h>
 #include <inklin_logic.h>
