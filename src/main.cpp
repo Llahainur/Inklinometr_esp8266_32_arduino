@@ -13,9 +13,11 @@
 
 const int count=1000;// количество измерений, от которых берется среднее
 
+float noize = 0.05;//уровень шума, градусов
+
 #ifndef WIFI_ACP 
-//#define CONNECT_TO_HOME //подключить к домашней сети
-#define IP 2 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
+#define CONNECT_TO_HOME //подключить к домашней сети
+//#define IP 2 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
 #endif
 
 #ifdef WIFI_ACP 
@@ -64,7 +66,7 @@ Kalman kalmanX;
 Kalman kalmanY;
 Kalman kalmanZ;
 
-float Q_bias = 0.01f;
+//float Q_bias = 0.0001f;
 #ifdef SERVER
 ESP32WebServer server(80);
 #endif
@@ -118,6 +120,7 @@ int i=0;
 int nomer_izmerenia = 0;
 
 
+
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
 }
@@ -134,8 +137,8 @@ void handle_onCalibrate() {
 #ifdef SERVER
 void handle_OnConnect(){
   //Serial.write("connection");
-  if(not (avX==avY and avY==avZ and avZ==0)){
-    server.send(200, "text/html", SendHTML(avX, avY, avZ, dX, dY, dZ, nomer_izmerenia,timer/1000000));
+  if(not (avX==0 and avY==0 and avZ==0)){
+    server.send(200, "text/html", SendHTML(avX, avY, avZ, dX, dY, dZ, nomer_izmerenia,timer/1000000, dX,dY,dZ, temp));    
   }
   else{
     server.send(200, "text/plain", "Loading...Wait for 30s");
@@ -153,9 +156,9 @@ void setup() {
   kalmanX.setAngle(180); // Set starting angle
   kalmanY.setAngle(180);
   kalmanZ.setAngle(180);
-  kalmanX.setQbias(Q_bias);
-  kalmanY.setQbias(Q_bias);
-  kalmanZ.setQbias(Q_bias);
+  // kalmanX.setQbias(Q_bias);
+  // kalmanY.setQbias(Q_bias);
+  // kalmanZ.setQbias(Q_bias);
   
   timer = micros();
   
@@ -211,6 +214,8 @@ gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalman
   Serial.print(kalAngleY,4); Serial.print(" ");
   Serial.print(kalAngleZ,4); Serial.print(" ");
   // Serial.print(temp,4);
+   Serial.print(avX,4); Serial.print(" ");
+   Serial.print(dX,4); Serial.print(" ");
   Serial.println();
   
   sumX+=kalAngleX;
@@ -232,6 +237,9 @@ gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalman
     sumX=0;
     sumY=0;
     sumZ=0;
+    dsX=0;
+    dsY=0;
+    dsZ=0;
     i=0;
 
   #ifdef CLIENT
