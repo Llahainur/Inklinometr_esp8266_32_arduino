@@ -29,8 +29,7 @@ const char* host = "192.168.1.1";
 #include <Arduino.h>
 #include <Wire.h> 
 #include <Kalman.h>
-#include <ESP8266WiFi.h>
-#include <ModbusRTU.h>
+#include <WiFi.h>
 
 #include <server_html.h>
 #include <inklin_logic.h>
