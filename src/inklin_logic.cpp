@@ -74,8 +74,8 @@ void Calibrate(MPU6050 mpu) {
   int16_t mpuGet[6];
 
   // используем стандартную точность
-  mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
-  mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_250);
+  mpu.setFullScaleAccelRange(0);
+  mpu.setFullScaleGyroRange(0);
 
   // обнуляем оффсеты
   mpu.setXAccelOffset(0);
