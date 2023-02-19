@@ -1,9 +1,9 @@
-#define SERVER //Добавлять ли веб-сервер
+//#define SERVER //Добавлять ли веб-сервер
 //or
 //#define CLIENT //Отправляем данные на веб сервер (https://radioprog.ru/post/1119), не реализовано
 //доделать веб клиент
 //or
-//#define MODBUS //Используем Модбас, не реализовано
+#define WIRED //Используем Модбас
 
 #ifdef SERVER
 #define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
@@ -15,8 +15,12 @@ const int count=1000;// количество измерений, от котор
 
 float noize = 0.05;//уровень шума, градусов
 
+#ifdef WIRED
+#define ADDR 1
+#endif
+
 #ifndef WIFI_ACP 
-#define CONNECT_TO_HOME //подключить к домашней сети
+//#define CONNECT_TO_HOME //подключить к домашней сети
 //#define IP 2 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
 #endif
 
@@ -31,15 +35,18 @@ const char* host = "192.168.1.1";
 #include <Arduino.h>
 #include <Wire.h> 
 #include <Kalman.h>
-#include <ESP8266WiFi.h>
-// #include <ModbusRTU.h>//если i2cdev как-то обновится и вылезет ошибка min исправляется заменой uint8 на int
 
-#include <server_html.h>
+// #include <ESP8266WiFi.h>
+
+// #include <server_html.h>
 #include <inklin_logic.h>
+#include <RS485.h>
 
 MPU6050 mpu;
 
 uint8_t IMUAddress = 0x68;
+
+SoftwareSerial RS485(RO, DI);//RO DI
 
 #ifdef CONNECT_TO_HOME
 /* SSID и пароль домашней сети */
@@ -53,10 +60,10 @@ const char* ssid = "NodeMCU";       // SSID
 const char* password = "12345678";  // пароль
 #endif
 
-/* Настройки IP адреса */
-IPAddress local_ip(192,168,1,IP);
-IPAddress gateway(192,168,1,1);
-IPAddress subnet(255,255,255,0);
+// /* Настройки IP адреса */
+// IPAddress local_ip(192,168,1,IP);
+// IPAddress gateway(192,168,1,1);
+// IPAddress subnet(255,255,255,0);
 
 Kalman kalmanX;
 Kalman kalmanY;
@@ -142,6 +149,8 @@ void handle_OnConnect(){
 }
 #endif
 
+
+
 void setup() {
   Serial.begin(9600);
   Wire.begin();
@@ -149,6 +158,12 @@ void setup() {
   Wire.write(0x6B);  // PWR_MGMT_1 register
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
+  #ifdef WIRED
+  RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
+  RS485_mode(1, RE, DE);
+  RS485.println("INIT");
+  RS485.println(ADDR);
+  #endif
   kalmanX.setAngle(180); // Set starting angle
   kalmanY.setAngle(180);
   kalmanZ.setAngle(180);
@@ -196,23 +211,38 @@ void setup() {
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
 }
 
+
+char val;
+
 void loop() {
   #ifdef SERVER
   server.handleClient();
+  #endif
+
+  #ifdef WIRED
+  // //RS485_mode(0, RE,DE);
+  // if (RS485.available())  {
+  //   RS485_mode(1, RE,DE);
+  //   RS485.(val);
+  // }
+ 
   #endif
   
   uint32_t looptime = micros();
   getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
   calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
-gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
-  // Serial.println(micros() - looptime);
+  gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
+
+  #ifndef WIRED
+  Serial.println(micros() - looptime);
   Serial.print(kalAngleX,4); Serial.print(" ");
   Serial.print(kalAngleY,4); Serial.print(" ");
   Serial.print(kalAngleZ,4); Serial.print(" ");
-  // Serial.print(temp,4);
-   Serial.print(avX,4); Serial.print(" ");
-   Serial.print(dX,4); Serial.print(" ");
+  Serial.print(temp,4);
+  Serial.print(avX,4); Serial.print(" ");
+  Serial.print(dX,4); Serial.print(" ");
   Serial.println();
+  #endif
   
   sumX+=kalAngleX;
   sumY+=kalAngleY;
@@ -237,6 +267,19 @@ gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalman
     dsY=0;
     dsZ=0;
     i=0;
+    #ifdef WIRED
+    //RS485.println("----------------------------------------------------------------");
+    RS485_mode(1,RE,DE);
+    RS485.println(ADDR);
+    RS485.println(timer);
+    RS485.print(avX,4); RS485.print(" ");
+    RS485.print(avY,4); RS485.print(" ");
+    RS485.print(avZ,4); RS485.print(" ");
+    RS485.print(dX,4);  RS485.print(" ");
+    RS485.print(dY,4);  RS485.print(" ");
+    RS485.print(dZ,4);  RS485.print(" ");
+    //RS485.println("----------------------------------------------------------------");
+    #endif
 
   #ifdef CLIENT
       WiFiClient client;
@@ -259,10 +302,6 @@ gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalman
 
   #endif
   }
-
-  // #ifdef WIFI_CLI
-  // WiFi.
-  // #endif
   delay(1); // The accelerometer's maximum samples rate is 1kHz
 }
 
