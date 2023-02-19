@@ -48,12 +48,12 @@ Kalman &kalmanX,
 Kalman &kalmanY,
 Kalman &kalmanZ) {
   /* Calculate the angls based on the different sensors and algorithm */
-  accZangle = (atan2(accX, accY) + PI) * RAD_TO_DEG;
-  accYangle = (atan2(accX, accZ) + PI) * RAD_TO_DEG;
-  accXangle = (atan2(accY, accZ) + PI) * RAD_TO_DEG;
-  // accXangle = (atan2(accX, sqrt(pow(accY,2)+pow(accZ,2)))) * RAD_TO_DEG;
-  // accYangle = (atan2(accY, sqrt(pow(accX,2)+pow(accZ,2)))) * RAD_TO_DEG;
-  // accZangle = (atan2(accZ, sqrt(pow(accX,2)+pow(accY,2)))) * RAD_TO_DEG;
+  // accZangle = (atan2(accX, accY) + PI) * RAD_TO_DEG;
+  // accYangle = (atan2(accX, accZ) + PI) * RAD_TO_DEG;
+  // accXangle = (atan2(accY, accZ) + PI) * RAD_TO_DEG;
+  accXangle = (atan2(accX, sqrt(pow(accY,2)+pow(accZ,2)))) * RAD_TO_DEG;
+  accYangle = (atan2(accY, sqrt(pow(accX,2)+pow(accZ,2)))) * RAD_TO_DEG;
+  accZangle = (atan2(accZ, sqrt(pow(accX,2)+pow(accY,2)))) * RAD_TO_DEG;
   float gyroXrate = ((float)gyroX / 32768 * 250.0);//попробовать увеличить диапазон, как следстствие уменьшить ошибку шума
   float gyroYrate = ((float)gyroY / 32768 * 250.0);
   float gyroZrate = ((float)gyroZ / 32768 * 250.0);
