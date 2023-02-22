@@ -147,11 +147,23 @@ void getAngleCmd(const char *arg) {
 /////начать карибровку команда////////
 void startCalibrateCmd(const char *arg) {
   Calibrate(mpu);
+      // выводим в порт
+    RS485_mode(1,RE,DE);
+    RS485.println("Calibration end. Your offsets:");
+    RS485.println("accX accY accZ gyrX gyrY gyrZ");
+    RS485.print(mpu.getXAccelOffset()); Serial.print(" ");
+    RS485.print(mpu.getYAccelOffset()); Serial.print(" ");
+    RS485.print(mpu.getZAccelOffset()); Serial.print(" ");
+    RS485.print(mpu.getXGyroOffset()); Serial.print(" ");
+    RS485.print(mpu.getYGyroOffset()); Serial.print(" ");
+    RS485.print(mpu.getZGyroOffset()); Serial.println(" ");
+    RS485.println(" ");
+    RS485_mode(0,RE,DE);
 }
 
 
 
-// ======= ФУНКЦИЯ КАЛИБРОВКИ =======
+// ======= ХЭНДЛЕР КАЛИБРОВКИ =======
 void handle_onCalibrate() {
   Calibrate(mpu);
   }
@@ -236,21 +248,13 @@ void setup() {
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
 }
 
-
-char val;
-
 void loop() {
   #ifdef SERVER
   server.handleClient();
   #endif
 
   #ifdef WIRED
-  // //RS485_mode(0, RE,DE);
-  // if (RS485.available())  {
-  //   RS485_mode(1, RE,DE);
-  //   RS485.(val);
-  // }
- cmdline.update();
+  cmdline.update();
   #endif
   
   uint32_t looptime = micros();
@@ -292,19 +296,6 @@ void loop() {
     dsY=0;
     dsZ=0;
     i=0;
-    #ifdef WIRED
-    //RS485.println("----------------------------------------------------------------");
-    // RS485_mode(1,RE,DE);
-    // RS485.println(ADDR);
-    // RS485.println(timer);
-    // RS485.print(avX,4); RS485.print(" ");
-    // RS485.print(avY,4); RS485.print(" ");
-    // RS485.print(avZ,4); RS485.print(" ");
-    // RS485.print(dX,4);  RS485.print(" ");
-    // RS485.print(dY,4);  RS485.print(" ");
-    // RS485.print(dZ,4);  RS485.print(" ");
-    //RS485.println("----------------------------------------------------------------");
-    #endif
 
   #ifdef CLIENT
       WiFiClient client;

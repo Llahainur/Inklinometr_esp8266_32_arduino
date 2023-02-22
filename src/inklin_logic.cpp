@@ -116,15 +116,6 @@ void Calibrate(MPU6050 mpu) {
 #ifdef SERVER
   server.send(200, "text/html", SendHTML_onCalibration(offsets[0] / 8, offsets[1] / 8,offsets[2]/8, offsets[3] / 4, offsets[4] / 4, offsets[5] / 4));
 #endif
-    // выводим в порт
-    Serial.println("Calibration end. Your offsets:");
-    Serial.println("accX accY accZ gyrX gyrY gyrZ");
-    Serial.print(mpu.getXAccelOffset()); Serial.print(", ");
-    Serial.print(mpu.getYAccelOffset()); Serial.print(", ");
-    Serial.print(mpu.getZAccelOffset()); Serial.print(", ");
-    Serial.print(mpu.getXGyroOffset()); Serial.print(", ");
-    Serial.print(mpu.getYGyroOffset()); Serial.print(", ");
-    Serial.print(mpu.getZGyroOffset()); Serial.println(" ");
-    Serial.println(" ");
+
 
 }
