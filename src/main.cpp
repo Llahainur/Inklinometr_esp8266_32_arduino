@@ -47,7 +47,7 @@ CmdLine cmdline(Serial);
 
 MPU6050 mpu;
 
-SoftwareSerial RS485(RO, DI);//RO DI
+// SoftwareSerial RS485(RO, DI);//RO DI
 
 uint8_t IMUAddress = 0x68;
 
@@ -178,10 +178,10 @@ void setup() {
   Wire.endTransmission(true);
   #ifdef WIRED
   cmdline.begin(commands, sizeof(commands));
-  RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
-  RS485_mode(1, RE, DE);
-  RS485.println("INIT");
-  RS485.println(ADDR);
+  // RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
+  // RS485_mode(1, RE, DE);
+  // RS485.println("INIT");
+  // RS485.println(ADDR);
   #endif
   
 
@@ -290,15 +290,15 @@ void loop() {
     i=0;
     #ifdef WIRED
     //RS485.println("----------------------------------------------------------------");
-    RS485_mode(1,RE,DE);
-    RS485.println(ADDR);
-    RS485.println(timer);
-    RS485.print(avX,4); RS485.print(" ");
-    RS485.print(avY,4); RS485.print(" ");
-    RS485.print(avZ,4); RS485.print(" ");
-    RS485.print(dX,4);  RS485.print(" ");
-    RS485.print(dY,4);  RS485.print(" ");
-    RS485.print(dZ,4);  RS485.print(" ");
+    // RS485_mode(1,RE,DE);
+    // RS485.println(ADDR);
+    // RS485.println(timer);
+    // RS485.print(avX,4); RS485.print(" ");
+    // RS485.print(avY,4); RS485.print(" ");
+    // RS485.print(avZ,4); RS485.print(" ");
+    // RS485.print(dX,4);  RS485.print(" ");
+    // RS485.print(dY,4);  RS485.print(" ");
+    // RS485.print(dZ,4);  RS485.print(" ");
     //RS485.println("----------------------------------------------------------------");
     #endif
 
