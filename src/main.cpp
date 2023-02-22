@@ -35,18 +35,21 @@ const char* host = "192.168.1.1";
 #include <Arduino.h>
 #include <Wire.h> 
 #include <Kalman.h>
-
+#include <RS485.h>
+#include <CmdLine.h>
 // #include <ESP8266WiFi.h>
 
 // #include <server_html.h>
 #include <inklin_logic.h>
-#include <RS485.h>
+#include <Cmd_Iface.h>
+
+CmdLine cmdline(Serial);
 
 MPU6050 mpu;
 
-uint8_t IMUAddress = 0x68;
-
 SoftwareSerial RS485(RO, DI);//RO DI
+
+uint8_t IMUAddress = 0x68;
 
 #ifdef CONNECT_TO_HOME
 /* SSID и пароль домашней сети */
@@ -82,8 +85,6 @@ int port = 80;
 #endif
 
 namespace vals{
-
-
 /* IMU Data */
 int16_t accX;
 int16_t accY;
@@ -130,6 +131,23 @@ int16_t gx, gy, gz;
 
 using namespace vals;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void getAngleCmd(const char *arg) {
+  if (arg[1] == ADDR){
+    Serial.println();
+    Serial.print(avX); Serial.print(" ");
+    Serial.print(avY); Serial.print(" ");
+    Serial.print(avZ); Serial.print(" ");
+    Serial.println();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void startCalibrateCmd(const char *arg) {
+  Calibrate(mpu);
+}
+
+
 
 // ======= ФУНКЦИЯ КАЛИБРОВКИ =======
 void handle_onCalibrate() {
@@ -159,11 +177,14 @@ void setup() {
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
   #ifdef WIRED
+  cmdline.begin(commands, sizeof(commands));
   RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
   RS485_mode(1, RE, DE);
   RS485.println("INIT");
   RS485.println(ADDR);
   #endif
+  
+
   kalmanX.setAngle(180); // Set starting angle
   kalmanY.setAngle(180);
   kalmanZ.setAngle(180);
@@ -225,7 +246,7 @@ void loop() {
   //   RS485_mode(1, RE,DE);
   //   RS485.(val);
   // }
- 
+ cmdline.update();
   #endif
   
   uint32_t looptime = micros();
