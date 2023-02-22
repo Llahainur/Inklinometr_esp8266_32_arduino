@@ -17,6 +17,7 @@ float noize = 0.05;//уровень шума, градусов
 
 #ifdef WIRED
 #define ADDR 1
+#define ADDR_CHAR '1'
 #endif
 
 #ifndef WIFI_ACP 
@@ -41,9 +42,9 @@ const char* host = "192.168.1.1";
 
 // #include <server_html.h>
 #include <inklin_logic.h>
-#include <Cmd_Iface.h>
+//#include <Cmd_Iface.h>
 
-CmdLine cmdline(Serial);
+//CmdLine cmdline(Serial);
 
 MPU6050 mpu;
 
@@ -133,31 +134,32 @@ using namespace vals;
 
 /////получить углы///////////////////////
 void getAngleCmd(const char *arg) {
+  char cmd = 'a';
   if (arg[1] == ADDR){
     RS485_mode(1,RE,DE);
-    RS485.println(ADDR);//убрать в релизе
-    RS485.print(avX); RS485.print(" ");
-    RS485.print(avY); RS485.print(" ");
-    RS485.print(avZ); RS485.print(" ");
-    RS485.println();
+    Serial.println(ADDR);//убрать в релизе
+    Serial.print(avX); Serial.print(" ");
+    Serial.print(avY); Serial.print(" ");
+    Serial.print(avZ); Serial.print(" ");
+    Serial.println();
     RS485_mode(0,RE,DE);
   }
 }
 
 /////начать карибровку команда////////
 void startCalibrateCmd(const char *arg) {
-  Calibrate(mpu);
+    Calibrate(mpu);
       // выводим в порт
     RS485_mode(1,RE,DE);
-    RS485.println("Calibration end. Your offsets:");
-    RS485.println("accX accY accZ gyrX gyrY gyrZ");
-    RS485.print(mpu.getXAccelOffset()); Serial.print(" ");
-    RS485.print(mpu.getYAccelOffset()); Serial.print(" ");
-    RS485.print(mpu.getZAccelOffset()); Serial.print(" ");
-    RS485.print(mpu.getXGyroOffset()); Serial.print(" ");
-    RS485.print(mpu.getYGyroOffset()); Serial.print(" ");
-    RS485.print(mpu.getZGyroOffset()); Serial.println(" ");
-    RS485.println(" ");
+    Serial.println("Calibration end. Your offsets:");
+    Serial.println("accX accY accZ gyrX gyrY gyrZ");
+    Serial.print(mpu.getXAccelOffset()); Serial.print(" ");
+    Serial.print(mpu.getYAccelOffset()); Serial.print(" ");
+    Serial.print(mpu.getZAccelOffset()); Serial.print(" ");
+    Serial.print(mpu.getXGyroOffset());  Serial.print(" ");
+    Serial.print(mpu.getYGyroOffset());  Serial.print(" ");
+    Serial.print(mpu.getZGyroOffset());  Serial.println(" ");
+    Serial.println(" ");
     RS485_mode(0,RE,DE);
 }
 
@@ -181,8 +183,6 @@ void handle_OnConnect(){
 }
 #endif
 
-
-
 void setup() {
   Serial.begin(9600);
   Wire.begin();
@@ -190,13 +190,13 @@ void setup() {
   Wire.write(0x6B);  // PWR_MGMT_1 register
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
-  #ifdef WIRED
-  cmdline.begin(commands, sizeof(commands));
-  RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
 
+  #ifdef WIRED
+  //cmdline.begin(commands, sizeof(commands));
+  RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
   RS485_mode(1, RE, DE);
-  RS485.println("INIT");
-  RS485.println(ADDR);
+  Serial.println("INIT");
+  Serial.println(ADDR);
   RS485_mode(0, RE, DE);
   #endif
   
@@ -254,7 +254,18 @@ void loop() {
   #endif
 
   #ifdef WIRED
-  cmdline.update();
+  //cmdline.update();
+    char data;
+  if (Serial.available() > 0)
+  {
+    data = Serial.read();        // читаем байт из буфера
+    Serial.print(data);          // выводим байт в последовательный порт
+    if (data == ADDR_CHAR){
+    Serial.print(avX); Serial.print(" ");
+    Serial.print(avY); Serial.print(" ");
+    Serial.print(avZ); Serial.print(" ");
+    }
+  }
   #endif
   
   uint32_t looptime = micros();
