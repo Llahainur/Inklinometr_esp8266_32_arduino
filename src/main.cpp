@@ -134,11 +134,13 @@ using namespace vals;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void getAngleCmd(const char *arg) {
   if (arg[1] == ADDR){
-    Serial.println();
-    Serial.print(avX); Serial.print(" ");
-    Serial.print(avY); Serial.print(" ");
-    Serial.print(avZ); Serial.print(" ");
-    Serial.println();
+    RS485_mode(1,RE,DE);
+    RS485.println(ADDR);//убрать в релизе
+    RS485.print(avX); RS485.print(" ");
+    RS485.print(avY); RS485.print(" ");
+    RS485.print(avZ); RS485.print(" ");
+    RS485.println();
+    RS485_mode(0,RE,DE);
   }
 }
 
@@ -179,9 +181,11 @@ void setup() {
   #ifdef WIRED
   cmdline.begin(commands, sizeof(commands));
   RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
+
   RS485_mode(1, RE, DE);
   RS485.println("INIT");
   RS485.println(ADDR);
+  RS485_mode(0, RE, DE);
   #endif
   
 
@@ -290,15 +294,15 @@ void loop() {
     i=0;
     #ifdef WIRED
     //RS485.println("----------------------------------------------------------------");
-    RS485_mode(1,RE,DE);
-    RS485.println(ADDR);
-    RS485.println(timer);
-    RS485.print(avX,4); RS485.print(" ");
-    RS485.print(avY,4); RS485.print(" ");
-    RS485.print(avZ,4); RS485.print(" ");
-    RS485.print(dX,4);  RS485.print(" ");
-    RS485.print(dY,4);  RS485.print(" ");
-    RS485.print(dZ,4);  RS485.print(" ");
+    // RS485_mode(1,RE,DE);
+    // RS485.println(ADDR);
+    // RS485.println(timer);
+    // RS485.print(avX,4); RS485.print(" ");
+    // RS485.print(avY,4); RS485.print(" ");
+    // RS485.print(avZ,4); RS485.print(" ");
+    // RS485.print(dX,4);  RS485.print(" ");
+    // RS485.print(dY,4);  RS485.print(" ");
+    // RS485.print(dZ,4);  RS485.print(" ");
     //RS485.println("----------------------------------------------------------------");
     #endif
 
