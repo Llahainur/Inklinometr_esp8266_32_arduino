@@ -11,6 +11,7 @@
 #define WIFI_CLI //если датчик - клиент другой сети
 #endif
 
+#define I2C
 const int count=1000;// количество измерений, от которых берется среднее
 
 #ifndef WIFI_ACP 
@@ -178,6 +179,10 @@ void setup() {
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  #ifdef I2C
+  i2c_test();
+  #endif
 #endif
 
   delay(100);
