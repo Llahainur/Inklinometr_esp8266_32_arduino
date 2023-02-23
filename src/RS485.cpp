@@ -2,8 +2,7 @@
 
 /*0-get, 1-send*/
 void RS485_mode(bool mode){
-  pinMode(RE, OUTPUT);
-  pinMode(DE, OUTPUT);
+
   digitalWrite(RE, mode);//RE is the 'Receiver Enable' pin and must be pulled low whenever you want to be able to receive data.
   digitalWrite(DE, mode);//DE is the 'Driver Enable' pin and must be pulled high while you're transmitting data.
 }

@@ -149,7 +149,7 @@ using namespace vals;
 void startCalibrateCmd(const char *arg) {
     Calibrate(mpu);
       // выводим в порт
-    RS485_mode(1,RE,DE);
+    RS485_mode(1);
     Serial.println("Calibration end. Your offsets:");
     Serial.println("accX accY accZ gyrX gyrY gyrZ");
     Serial.print(mpu.getXAccelOffset()); Serial.print(" ");
@@ -159,7 +159,7 @@ void startCalibrateCmd(const char *arg) {
     Serial.print(mpu.getYGyroOffset());  Serial.print(" ");
     Serial.print(mpu.getZGyroOffset());  Serial.println(" ");
     Serial.println(" ");
-    RS485_mode(0,RE,DE);
+    RS485_mode(0);
 }
 
 
@@ -183,6 +183,9 @@ void handle_OnConnect(){
 #endif
 
 void setup() {
+  pinMode(RE, OUTPUT);
+  pinMode(DE, OUTPUT);
+
   Serial.begin(9600);
   Wire.begin();
   Wire.beginTransmission(IMUAddress);
@@ -193,15 +196,13 @@ void setup() {
   #ifdef WIRED
   //cmdline.begin(commands, sizeof(commands));
   RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
-  RS485_mode(1, RE, DE);
-  Serial.println("INIT");
+  RS485_mode(1);
+  RS485.println("INIT");
   int ar[3]=ADDR_ARR;
-  for(int i=0;i<3;i++){Serial.write(ar[i]);}
-
-  RS485_mode(0, RE, DE);
+  for(int i=0;i<3;i++){RS485.write(ar[i]);}
+  RS485_mode(0);
   #endif
   
-
   kalmanX.setAngle(180); // Set starting angle
   kalmanY.setAngle(180);
   kalmanZ.setAngle(180);
@@ -255,36 +256,48 @@ void loop() {
   #endif
 
   #ifdef WIRED
-    char data[7];
-    char addr[3]=ADDR_ARR;
-    char cmd;
-    bool flag=1;
-  if (Serial.available() > 3){
-    for(int i = 0; i < 5; i++){
-      data[i] = Serial.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
+    
+  char data[7];
+  char addr[3]=ADDR_ARR;
+  char cmd;
+  bool flag=1;
+  
+  RS485_mode(0);
+  if (RS485.available() > 0){
+    
+    for(int i = 0; i <= 4; i++){
+      data[i] = RS485.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
       if (i<3){
         if(addr[i]!=data[i]){;
           flag = 0;
-        }}
+        }
+      }
       if(i==3){
         cmd=data[i];
       }
     }
     if (flag and cmd=='g'){
-      Serial.print(avX); Serial.print(" ");
-      Serial.print(avY); Serial.print(" ");
-      Serial.print(avZ); Serial.print(" ");
-      Serial.println();
+      RS485_mode(1);
+      RS485.print(avX); RS485.print(" ");
+      RS485.print(avY); RS485.print(" ");
+      RS485.print(avZ); RS485.print(" ");
+      RS485.println();
       flag = 0;
     }
-    if (flag and cmd=='c'){
-      Serial.print("calibration ");
+    else if (flag and cmd=='c'){
+      RS485_mode(1);
+      RS485.print("calibration ");
       int ar[3]=ADDR_ARR;
-      for(int i=0;i<3;i++){Serial.write(ar[i]);}
+      for(int i=0;i<3;i++){RS485.write(ar[i]);}
       Calibrate(mpu);
       flag = 0;
     }
+    else{
+      RS485_mode(1);
+      RS485.print(data);
     }
+    }
+    
   #endif
   
   uint32_t looptime = micros();
