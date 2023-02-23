@@ -262,11 +262,9 @@ void setup() {
   //mpu.setFullScaleAccelRange(0);//-16..16 g/s // вернуть, если что-то с погрешностью пойдет не так
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
 
-  DMP_setup(mpu);
 }
 
 void loop() {
-  getDMP_angles(DMPx, DMPy, DMPz, mpu);
 
   #ifdef SERVER
   server.handleClient();
