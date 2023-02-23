@@ -185,6 +185,7 @@ void handle_OnConnect(){
 
 void print_addr(){
   int ar[3]=ADDR_ARR;
+  RS485.print("address: ");
   for(int i=0;i<3;i++){RS485.write(ar[i]);}
   RS485.println();
 };
