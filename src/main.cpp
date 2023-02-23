@@ -36,6 +36,10 @@ const char* host = "192.168.1.1";
 
 #include <server_html.h>
 #include <inklin_logic.h>
+#include <i2c.h>
+//#include <Cmd_Iface.h>
+
+//CmdLine cmdline(Serial);
 
 MPU6050 mpu;
 
