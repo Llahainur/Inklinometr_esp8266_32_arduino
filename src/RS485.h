@@ -6,4 +6,4 @@
 #define RE 10
 #define DE 11           // Подключаем библиотеку SoftwareSerial
 
-void RS485_mode(bool mode, int re, int de);
+void RS485_mode(bool mode);
