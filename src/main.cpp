@@ -42,6 +42,7 @@ const char* host = "192.168.1.1";
 
 // #include <server_html.h>
 #include <inklin_logic.h>
+#include <i2c.h>
 //#include <Cmd_Iface.h>
 
 //CmdLine cmdline(Serial);
@@ -182,6 +183,12 @@ void handle_OnConnect(){
 }
 #endif
 
+void print_addr(){
+  int ar[3]=ADDR_ARR;
+  for(int i=0;i<3;i++){RS485.write(ar[i]);}
+  RS485.println();
+};
+
 void setup() {
   pinMode(RE, OUTPUT);
   pinMode(DE, OUTPUT);
@@ -198,8 +205,7 @@ void setup() {
   RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
   RS485_mode(1);
   RS485.println("INIT");
-  int ar[3]=ADDR_ARR;
-  for(int i=0;i<3;i++){RS485.write(ar[i]);}
+  print_addr();
   RS485_mode(0);
   #endif
   
@@ -276,25 +282,37 @@ void loop() {
         cmd=data[i];
       }
     }
-    if (flag and cmd=='g'){
+    if (flag){
+    if(cmd=='g'){
       RS485_mode(1);
       RS485.print(avX); RS485.print(" ");
       RS485.print(avY); RS485.print(" ");
       RS485.print(avZ); RS485.print(" ");
       RS485.println();
       flag = 0;
+      RS485_mode(0);
     }
-    else if (flag and cmd=='c'){
+    else if (cmd=='c'){
       RS485_mode(1);
       RS485.print("calibration ");
-      int ar[3]=ADDR_ARR;
-      for(int i=0;i<3;i++){RS485.write(ar[i]);}
+      print_addr();
       Calibrate(mpu);
       flag = 0;
+      RS485_mode(0);
+    }
+    else if (cmd=='i'){
+      RS485_mode(1);
+      i2c_test(RS485);
+      print_addr();
+      flag = 0;
+      RS485_mode(0);
     }
     else{
       RS485_mode(1);
-      RS485.print(data);
+      RS485.print("error in ");
+      print_addr();
+      RS485_mode(0);
+    }
     }
     }
     
