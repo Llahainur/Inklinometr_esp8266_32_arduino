@@ -16,8 +16,8 @@ const int count=1000;// количество измерений, от котор
 float noize = 0.05;//уровень шума, градусов
 
 #ifdef WIRED
-#define ADDR 1
-#define ADDR_CHAR '1'
+//#define ADDR 100
+#define ADDR_ARR {'1','0','0'}
 #endif
 
 #ifndef WIFI_ACP 
@@ -37,7 +37,7 @@ const char* host = "192.168.1.1";
 #include <Wire.h> 
 #include <Kalman.h>
 #include <RS485.h>
-#include <CmdLine.h>
+//#include <CmdLine.h>
 // #include <ESP8266WiFi.h>
 
 // #include <server_html.h>
@@ -132,19 +132,18 @@ int16_t gx, gy, gz;
 
 using namespace vals;
 
-/////получить углы///////////////////////
-void getAngleCmd(const char *arg) {
-  char cmd = 'a';
-  if (arg[1] == ADDR){
-    RS485_mode(1,RE,DE);
-    Serial.println(ADDR);//убрать в релизе
-    Serial.print(avX); Serial.print(" ");
-    Serial.print(avY); Serial.print(" ");
-    Serial.print(avZ); Serial.print(" ");
-    Serial.println();
-    RS485_mode(0,RE,DE);
-  }
-}
+// /////получить углы///////////////////////
+// void getAngleCmd(const char *arg) {
+//   if (arg[1] == ADDR){
+//     RS485_mode(1,RE,DE);
+//     Serial.println(ADDR);//убрать в релизе
+//     Serial.print(avX); Serial.print(" ");
+//     Serial.print(avY); Serial.print(" ");
+//     Serial.print(avZ); Serial.print(" ");
+//     Serial.println();
+//     RS485_mode(0,RE,DE);
+//   }
+// }
 
 /////начать карибровку команда////////
 void startCalibrateCmd(const char *arg) {
@@ -196,7 +195,9 @@ void setup() {
   RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
   RS485_mode(1, RE, DE);
   Serial.println("INIT");
-  Serial.println(ADDR);
+  int ar[3]=ADDR_ARR;
+  for(int i=0;i<3;i++){Serial.write(ar[i]);}
+
   RS485_mode(0, RE, DE);
   #endif
   
@@ -254,18 +255,36 @@ void loop() {
   #endif
 
   #ifdef WIRED
-  //cmdline.update();
-    char data;
-  if (Serial.available() > 0)
-  {
-    data = Serial.read();        // читаем байт из буфера
-    Serial.print(data);          // выводим байт в последовательный порт
-    if (data == ADDR_CHAR){
-    Serial.print(avX); Serial.print(" ");
-    Serial.print(avY); Serial.print(" ");
-    Serial.print(avZ); Serial.print(" ");
+    char data[7];
+    char addr[3]=ADDR_ARR;
+    char cmd;
+    bool flag=1;
+  if (Serial.available() > 3){
+    for(int i = 0; i < 5; i++){
+      data[i] = Serial.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
+      if (i<3){
+        if(addr[i]!=data[i]){;
+          flag = 0;
+        }}
+      if(i==3){
+        cmd=data[i];
+      }
     }
-  }
+    if (flag and cmd=='g'){
+      Serial.print(avX); Serial.print(" ");
+      Serial.print(avY); Serial.print(" ");
+      Serial.print(avZ); Serial.print(" ");
+      Serial.println();
+      flag = 0;
+    }
+    if (flag and cmd=='c'){
+      Serial.print("calibration ");
+      int ar[3]=ADDR_ARR;
+      for(int i=0;i<3;i++){Serial.write(ar[i]);}
+      Calibrate(mpu);
+      flag = 0;
+    }
+    }
   #endif
   
   uint32_t looptime = micros();
