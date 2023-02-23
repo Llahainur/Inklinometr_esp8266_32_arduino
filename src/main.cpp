@@ -3,7 +3,7 @@
 //#define CLIENT //Отправляем данные на веб сервер (https://radioprog.ru/post/1119), не реализовано
 //доделать веб клиент
 //or
-#define WIRED //Используем Модбас
+//#define WIRED //Используем Модбас
 
 #ifdef SERVER
 #define WIFI_ACP //если датчик - центральный, делаем его точкой доступа
@@ -36,7 +36,7 @@ const char* host = "192.168.1.1";
 #include <Arduino.h>
 #include <Wire.h> 
 #include <Kalman.h>
-#include <RS485.h>
+//#include <RS485.h>
 //#include <CmdLine.h>
 // #include <ESP8266WiFi.h>
 
@@ -44,6 +44,7 @@ const char* host = "192.168.1.1";
 #include <inklin_logic.h>
 #include <i2c.h>
 //#include <Cmd_Iface.h>
+#include <dmp.h>
 
 //CmdLine cmdline(Serial);
 
@@ -125,7 +126,9 @@ float dsZ;
 int i=0;
 int nomer_izmerenia = 0;
 
-
+float DMPx;
+float DMPy;
+float DMPz;
 
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
@@ -183,16 +186,17 @@ void handle_OnConnect(){
 }
 #endif
 
+#ifdef WIRED
 void print_addr(){
   int ar[3]=ADDR_ARR;
   RS485.print("address: ");
   for(int i=0;i<3;i++){RS485.write(ar[i]);}
   RS485.println();
 };
+#endif
 
 void setup() {
-  pinMode(RE, OUTPUT);
-  pinMode(DE, OUTPUT);
+  
 
   Serial.begin(9600);
   Wire.begin();
@@ -202,6 +206,8 @@ void setup() {
   Wire.endTransmission(true);
 
   #ifdef WIRED
+  pinMode(RE, OUTPUT);
+  pinMode(DE, OUTPUT);
   //cmdline.begin(commands, sizeof(commands));
   RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
   RS485_mode(1);
@@ -216,7 +222,6 @@ void setup() {
   // kalmanX.setQbias(Q_bias);
   // kalmanY.setQbias(Q_bias);
   // kalmanZ.setQbias(Q_bias);
-  
   timer = micros();
   
 #ifdef WIFI_ACP
@@ -239,9 +244,10 @@ void setup() {
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  delay(100);
 #endif
 
-  delay(100);
+  
 
 #ifdef SERVER
   server.on("/", handle_OnConnect);
@@ -255,9 +261,13 @@ void setup() {
   mpu.setFullScaleAccelRange(3);//-2..2 g/s
   //mpu.setFullScaleAccelRange(0);//-16..16 g/s // вернуть, если что-то с погрешностью пойдет не так
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
+
+  DMP_setup(mpu);
 }
 
 void loop() {
+  getDMP_angles(DMPx, DMPy, DMPz, mpu);
+
   #ifdef SERVER
   server.handleClient();
   #endif
@@ -327,11 +337,12 @@ void loop() {
   #ifndef WIRED
   Serial.println(micros() - looptime);
   Serial.print(kalAngleX,4); Serial.print(" ");
-  Serial.print(kalAngleY,4); Serial.print(" ");
-  Serial.print(kalAngleZ,4); Serial.print(" ");
-  Serial.print(temp,4);
-  Serial.print(avX,4); Serial.print(" ");
-  Serial.print(dX,4); Serial.print(" ");
+  // Serial.print(kalAngleY,4); Serial.print(" ");
+  // Serial.print(kalAngleZ,4); Serial.print(" ");
+  //Serial.print(temp,4);
+  Serial.print(DMPx,4); Serial.print(" ");
+  // Serial.print(DMPy,4); Serial.print(" ");
+  // Serial.print(DMPz,4); Serial.print(" ");
   Serial.println();
   #endif
   
