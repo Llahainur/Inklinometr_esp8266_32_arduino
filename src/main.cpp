@@ -184,10 +184,11 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
+  
+#endif
   #ifdef I2C
   i2c_test();
   #endif
-#endif
 
   delay(100);
 
