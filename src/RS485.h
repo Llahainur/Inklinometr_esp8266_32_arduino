@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
+// #pragma once
+
 #define DI 8  //Driver In 
 #define RO 9  //Receiver Out
 #define RE 10 //Receiver Enable

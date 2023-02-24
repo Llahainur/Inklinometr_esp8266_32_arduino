@@ -33,18 +33,16 @@ float noize = 0.05;//уровень шума, градусов
 const char* host = "192.168.1.1";
 #endif
 
-#include <Arduino.h>
-#include <Wire.h> 
-#include <Kalman.h>
-//#include <RS485.h>
+// #include <Arduino.h>
+// #include <Wire.h> 
+// #include <Kalman.h>
 //#include <CmdLine.h>
 // #include <ESP8266WiFi.h>
 
-// #include <server_html.h>
 #include <inklin_logic.h>
 #include <i2c.h>
 //#include <Cmd_Iface.h>
-#include <dmp.h>
+// #include <server_html.h>
 
 //CmdLine cmdline(Serial);
 
@@ -53,6 +51,8 @@ MPU6050 mpu;
 SoftwareSerial RS485(RO, DI);//RO DI
 
 uint8_t IMUAddress = 0x68;
+
+uint8_t fifoBuffer[64]; // FIFO storage buffer
 
 #ifdef CONNECT_TO_HOME
 /* SSID и пароль домашней сети */
@@ -136,19 +136,6 @@ int16_t gx, gy, gz;
 
 using namespace vals;
 
-// /////получить углы///////////////////////
-// void getAngleCmd(const char *arg) {
-//   if (arg[1] == ADDR){
-//     RS485_mode(1,RE,DE);
-//     Serial.println(ADDR);//убрать в релизе
-//     Serial.print(avX); Serial.print(" ");
-//     Serial.print(avY); Serial.print(" ");
-//     Serial.print(avZ); Serial.print(" ");
-//     Serial.println();
-//     RS485_mode(0,RE,DE);
-//   }
-// }
-
 /////начать карибровку команда////////
 void startCalibrateCmd(const char *arg) {
     Calibrate(mpu);
@@ -196,7 +183,7 @@ void print_addr(){
 #endif
 
 void setup() {
-  
+  dmp_init(mpu);
 
   Serial.begin(9600);
   Wire.begin();
@@ -326,14 +313,14 @@ void loop() {
     }
     
   #endif
-  
+  dmp_loop(mpu,fifoBuffer,DMPx, DMPy, DMPz);
   uint32_t looptime = micros();
   getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
   calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
   gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
 
   #ifndef WIRED
-  Serial.println(micros() - looptime);
+  //Serial.println(micros() - looptime);
   Serial.print(kalAngleX,4); Serial.print(" ");
   // Serial.print(kalAngleY,4); Serial.print(" ");
   // Serial.print(kalAngleZ,4); Serial.print(" ");

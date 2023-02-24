@@ -1,8 +1,10 @@
 #include <Wire.h>
 #include <Arduino.h>
 #include <Kalman.h>
-#include <MPU6050.h>
 #include <math.h>
+//#include <I2Cdev.h>
+#include <MPU6050_6Axis_MotionApps_V6_12.h>
+//#include <MPU6050.h>
 
 #define BUFFER_SIZE 100
 
@@ -43,3 +45,6 @@ void Calibrate(MPU6050 mpu);
 
 // calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
 // gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
+
+void dmp_init(MPU6050 mpu);
+void dmp_loop(MPU6050 mpu, uint8_t *fifoBuffer, float &x,float &y,float &z );
