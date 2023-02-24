@@ -286,13 +286,20 @@ void loop() {
     }
     if (flag){
     if(cmd=='g'){
+      if (not (avX==0 and avY==0 and avZ==0)){
       RS485_mode(1);
       RS485.print(avX); RS485.print(" ");
       RS485.print(avY); RS485.print(" ");
       RS485.print(avZ); RS485.print(" ");
       RS485.println();
       flag = 0;
-      RS485_mode(0);
+      RS485_mode(0);}
+      else{
+        RS485_mode(1);
+        print_addr();RS485.println();
+        RS485.println("Wait for 30s");
+        RS485_mode(0);
+      }
     }
     else if (cmd=='c'){
       RS485_mode(1);
