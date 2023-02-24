@@ -147,21 +147,21 @@ using namespace vals;
 // }
 
 /////начать карибровку команда////////
-void startCalibrateCmd(const char *arg) {
-    Calibrate(mpu);
-      // выводим в порт
-    RS485_mode(1);
-    Serial.println("Calibration end. Your offsets:");
-    Serial.println("accX accY accZ gyrX gyrY gyrZ");
-    Serial.print(mpu.getXAccelOffset()); Serial.print(" ");
-    Serial.print(mpu.getYAccelOffset()); Serial.print(" ");
-    Serial.print(mpu.getZAccelOffset()); Serial.print(" ");
-    Serial.print(mpu.getXGyroOffset());  Serial.print(" ");
-    Serial.print(mpu.getYGyroOffset());  Serial.print(" ");
-    Serial.print(mpu.getZGyroOffset());  Serial.println(" ");
-    Serial.println(" ");
-    RS485_mode(0);
-}
+// void startCalibrateCmd(const char *arg) {
+//     Calibrate(mpu);
+//       // выводим в порт
+//     RS485_mode(1);
+//     Serial.println("Calibration end. Your offsets:");
+//     Serial.println("accX accY accZ gyrX gyrY gyrZ");
+//     Serial.print(mpu.getXAccelOffset()); Serial.print(" ");
+//     Serial.print(mpu.getYAccelOffset()); Serial.print(" ");
+//     Serial.print(mpu.getZAccelOffset()); Serial.print(" ");
+//     Serial.print(mpu.getXGyroOffset());  Serial.print(" ");
+//     Serial.print(mpu.getYGyroOffset());  Serial.print(" ");
+//     Serial.print(mpu.getZGyroOffset());  Serial.println(" ");
+//     Serial.println(" ");
+//     RS485_mode(0);
+// }
 
 
 
