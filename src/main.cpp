@@ -185,9 +185,9 @@ void handle_OnConnect(){
 
 void print_addr(){
   int ar[3]=ADDR_ARR;
-  RS485.print("address: ");
+  //RS485.print("address: ");
   for(int i=0;i<3;i++){RS485.write(ar[i]);}
-  RS485.println();
+  //RS485.println();
 };
 
 void setup() {
@@ -206,7 +206,7 @@ void setup() {
   RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
   RS485_mode(1);
   RS485.println("INIT");
-  print_addr();
+  print_addr();RS485.println();
   RS485_mode(0);
   #endif
   
@@ -264,22 +264,23 @@ void loop() {
 
   #ifdef WIRED
     
-  char data[7];
+  char data[5];
   char addr[3]=ADDR_ARR;
   char cmd;
   bool flag=1;
+  int const len=4;
   
   RS485_mode(0);
   if (RS485.available() > 0){
     
-    for(int i = 0; i <= 4; i++){
+    for(int i = 0; i < len; i++){
       data[i] = RS485.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
-      if (i<3){
+      if (i<len-1){
         if(addr[i]!=data[i]){;
           flag = 0;
         }
       }
-      if(i==3){
+      if(i==len-1){
         cmd=data[i];
       }
     }
@@ -295,8 +296,8 @@ void loop() {
     }
     else if (cmd=='c'){
       RS485_mode(1);
-      RS485.print("calibration ");
-      print_addr();
+      RS485.println("Calibration start. It will take about 5 seconds");
+      print_addr();RS485.println();
       Calibrate(mpu);
       flag = 0;
       RS485_mode(0);
@@ -304,16 +305,18 @@ void loop() {
     else if (cmd=='i'){
       RS485_mode(1);
       i2c_test(RS485);
-      print_addr();
+      print_addr();RS485.println();
       flag = 0;
       RS485_mode(0);
     }
-    else{
-      RS485_mode(1);
-      RS485.print("error in ");
-      print_addr();
-      RS485_mode(0);
-    }
+    // else{
+    //   RS485_mode(1);
+    //   print_addr();
+    //   RS485.println("e");
+    //   RS485.println();
+    //   for(int i=0; i<len;i++){RS485.write((int)data[i]);}
+    //   RS485_mode(0);
+    // }
     }
     }
     
