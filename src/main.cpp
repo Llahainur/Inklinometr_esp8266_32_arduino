@@ -190,9 +190,9 @@ void setup() {
   RS485_mode(0);
   #endif
   
-  kalmanX.setAngle(180); // Set starting angle
-  kalmanY.setAngle(180);
-  kalmanZ.setAngle(180);
+  kalmanX.setAngle(0); // Set starting angle
+  kalmanY.setAngle(0);
+  kalmanZ.setAngle(0);
   // kalmanX.setQbias(Q_bias);
   // kalmanY.setQbias(Q_bias);
   // kalmanZ.setQbias(Q_bias);
@@ -253,7 +253,11 @@ void loop() {
   char cmd;
   bool flag=1;
   int const len=4;
-  Serial.print(avX,4); Serial.print(" "); Serial.println(timer);
+  Serial.print(kalAngleX,4);Serial.print(" ");
+  Serial.print(sumX,4);Serial.print(" ");
+  Serial.print(avX,4); Serial.print(" "); 
+  Serial.print(count,4); Serial.print(" ");
+  Serial.println(nomer_izmerenia);
   // RS485_mode(0);
   if (RS485.available() > 0){
     for(int i = 0; i < len; i++){
