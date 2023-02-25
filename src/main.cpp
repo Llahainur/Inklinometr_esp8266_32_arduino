@@ -293,17 +293,27 @@ void loop() {
       RS485.print(avZ); RS485.print(" ");
       RS485.println();
       flag = 0;
-      RS485_mode(0);}
+      RS485_mode(0);
+      }
       else{
         RS485_mode(1);
         print_addr();RS485.println();
-        RS485.println("Wait for 30s");
+        RS485.println("WAIT_30_S");
         RS485_mode(0);
       }
     }
+    else if(cmd=='n'){
+      RS485_mode(1);
+      RS485.print(accXangle); RS485.print(" ");
+      RS485.print(accYangle); RS485.print(" ");
+      RS485.print(accZangle); RS485.print(" ");
+      RS485.println();
+      flag = 0;
+      RS485_mode(0);
+      }
     else if (cmd=='c'){
       RS485_mode(1);
-      RS485.println("Calibration start. It will take about 5 seconds");
+      RS485.println("CALIBRAION");
       print_addr();RS485.println();
       Calibrate(mpu);
       flag = 0;
