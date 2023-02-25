@@ -15,11 +15,7 @@ const int count=1000;// количество измерений, от котор
 
 float noize = 0.05;//уровень шума, градусов
 
-#ifdef WIRED
-//#define ADDR 100
 #define ADDR_ARR {'1','0','0'}
-#endif
-
 #ifndef WIFI_ACP 
 //#define CONNECT_TO_HOME //подключить к домашней сети
 //#define IP 2 //IP адрес датчика. Должен быть уникален. 192.168.1.IP
@@ -146,23 +142,6 @@ using namespace vals;
 //   }
 // }
 
-/////начать карибровку команда////////
-// void startCalibrateCmd(const char *arg) {
-//     Calibrate(mpu);
-//       // выводим в порт
-//     RS485_mode(1);
-//     Serial.println("Calibration end. Your offsets:");
-//     Serial.println("accX accY accZ gyrX gyrY gyrZ");
-//     Serial.print(mpu.getXAccelOffset()); Serial.print(" ");
-//     Serial.print(mpu.getYAccelOffset()); Serial.print(" ");
-//     Serial.print(mpu.getZAccelOffset()); Serial.print(" ");
-//     Serial.print(mpu.getXGyroOffset());  Serial.print(" ");
-//     Serial.print(mpu.getYGyroOffset());  Serial.print(" ");
-//     Serial.print(mpu.getZGyroOffset());  Serial.println(" ");
-//     Serial.println(" ");
-//     RS485_mode(0);
-// }
-
 
 
 // ======= ХЭНДЛЕР КАЛИБРОВКИ =======
@@ -261,9 +240,14 @@ void loop() {
   #ifdef SERVER
   server.handleClient();
   #endif
+      
+
+  uint32_t looptime = micros();
+  getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
+  calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
+  gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
 
   #ifdef WIRED
-    
   char data[5];
   char addr[3]=ADDR_ARR;
   char cmd;
@@ -286,21 +270,22 @@ void loop() {
     }
     if (flag){
     if(cmd=='g'){
-      if (not (avX==0 and avY==0 and avZ==0)){
+      //if (not (avX==0 and avY==0 and avZ==0)){
       RS485_mode(1);
+      RS485.print(timer/1000000); RS485.print(" ");
       RS485.print(avX); RS485.print(" ");
       RS485.print(avY); RS485.print(" ");
       RS485.print(avZ); RS485.print(" ");
       RS485.println();
       flag = 0;
       RS485_mode(0);
-      }
-      else{
-        RS485_mode(1);
-        print_addr();RS485.println();
-        RS485.println("WAIT_30_S");
-        RS485_mode(0);
-      }
+      //}
+      //else{
+        // RS485_mode(1);
+        // print_addr();RS485.println();
+        // RS485.println("WAIT_30_S");
+        // RS485_mode(0);
+      //}
     }
     else if(cmd=='n'){
       RS485_mode(1);
@@ -339,20 +324,17 @@ void loop() {
     
   #endif
   
-  uint32_t looptime = micros();
-  getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
-  calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
-  gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
+
 
   #ifndef WIRED
-  Serial.println(micros() - looptime);
-  Serial.print(kalAngleX,4); Serial.print(" ");
-  Serial.print(kalAngleY,4); Serial.print(" ");
-  Serial.print(kalAngleZ,4); Serial.print(" ");
-  Serial.print(temp,4);
-  Serial.print(avX,4); Serial.print(" ");
-  Serial.print(dX,4); Serial.print(" ");
-  Serial.println();
+  // Serial.println(micros() - looptime);
+  //Serial.print(kalAngleX,4); Serial.print(" ");
+  // Serial.print(kalAngleY,4); Serial.print(" ");
+  // Serial.print(kalAngleZ,4); Serial.print(" ");
+  // Serial.print(temp,4);
+  // Serial.print(avX,4); Serial.print(" ");
+  // Serial.print(dX,4); Serial.print(" ");
+  // Serial.println();
   #endif
   
   sumX+=kalAngleX;
@@ -371,6 +353,7 @@ void loop() {
     dX = dsX/count;
     dY = dsY/count;
     dZ = dsZ/count;
+    Serial.print(avX,4); Serial.print(" ");
     sumX=0;
     sumY=0;
     sumZ=0;
@@ -378,6 +361,12 @@ void loop() {
     dsY=0;
     dsZ=0;
     i=0;
+    // RS485_mode(1);
+    // RS485.print(avX); RS485.print(" ");
+    // RS485.print(avY); RS485.print(" ");
+    // RS485.print(avZ); RS485.print(" ");
+    // RS485.println();
+    // RS485_mode(0);
 
   #ifdef CLIENT
       WiFiClient client;
