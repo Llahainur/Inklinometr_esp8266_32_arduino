@@ -154,9 +154,9 @@ void setup() {
   Wire.write(0x6B);  // PWR_MGMT_1 register
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
-  kalmanX.setAngle(180); // Set starting angle
-  kalmanY.setAngle(180);
-  kalmanZ.setAngle(180);
+  kalmanX.setAngle(0); // Set starting angle
+  kalmanY.setAngle(0);
+  kalmanZ.setAngle(0);
   // kalmanX.setQbias(Q_bias);
   // kalmanY.setQbias(Q_bias);
   // kalmanZ.setQbias(Q_bias);
