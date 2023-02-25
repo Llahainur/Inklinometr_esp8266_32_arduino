@@ -179,6 +179,7 @@ void setup() {
   Wire.write(0x6B);  // PWR_MGMT_1 register
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
+  Serial.println("INIT");
 
   #ifdef WIRED
   //cmdline.begin(commands, sizeof(commands));
@@ -240,7 +241,6 @@ void loop() {
   #ifdef SERVER
   server.handleClient();
   #endif
-      
 
   uint32_t looptime = micros();
   getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
@@ -253,10 +253,9 @@ void loop() {
   char cmd;
   bool flag=1;
   int const len=4;
-  
-  RS485_mode(0);
+  Serial.print(avX,4); Serial.print(" "); Serial.println(timer);
+  // RS485_mode(0);
   if (RS485.available() > 0){
-    
     for(int i = 0; i < len; i++){
       data[i] = RS485.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
       if (i<len-1){
@@ -270,7 +269,6 @@ void loop() {
     }
     if (flag){
     if(cmd=='g'){
-      //if (not (avX==0 and avY==0 and avZ==0)){
       RS485_mode(1);
       RS485.print(timer/1000000); RS485.print(" ");
       RS485.print(avX); RS485.print(" ");
@@ -279,13 +277,6 @@ void loop() {
       RS485.println();
       flag = 0;
       RS485_mode(0);
-      //}
-      //else{
-        // RS485_mode(1);
-        // print_addr();RS485.println();
-        // RS485.println("WAIT_30_S");
-        // RS485_mode(0);
-      //}
     }
     else if(cmd=='n'){
       RS485_mode(1);
@@ -311,14 +302,6 @@ void loop() {
       flag = 0;
       RS485_mode(0);
     }
-    // else{
-    //   RS485_mode(1);
-    //   print_addr();
-    //   RS485.println("e");
-    //   RS485.println();
-    //   for(int i=0; i<len;i++){RS485.write((int)data[i]);}
-    //   RS485_mode(0);
-    // }
     }
     }
     
@@ -353,7 +336,6 @@ void loop() {
     dX = dsX/count;
     dY = dsY/count;
     dZ = dsZ/count;
-    Serial.print(avX,4); Serial.print(" ");
     sumX=0;
     sumY=0;
     sumZ=0;
