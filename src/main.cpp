@@ -253,11 +253,7 @@ void loop() {
   char cmd;
   bool flag=1;
   int const len=4;
-  Serial.print(kalAngleX,4);Serial.print(" ");
-  Serial.print(sumX,4);Serial.print(" ");
-  Serial.print(avX,4); Serial.print(" "); 
-  Serial.print(count,4); Serial.print(" ");
-  Serial.println(nomer_izmerenia);
+ 
   // RS485_mode(0);
   if (RS485.available() > 0){
     for(int i = 0; i < len; i++){
@@ -331,7 +327,6 @@ void loop() {
   dsY+=abs(kalAngleY-avY);
   dsZ+=abs(kalAngleZ-avZ);
   i++;
-  
   if(i == count){  
     nomer_izmerenia++;
     avX = sumX/count;
@@ -340,6 +335,10 @@ void loop() {
     dX = dsX/count;
     dY = dsY/count;
     dZ = dsZ/count;
+  // Serial.print(kalAngleX,4);Serial.print(" ");
+  // Serial.print(dsX,4);Serial.print(" ");
+  // Serial.print(avX,4); Serial.print(" "); 
+  // Serial.println(nomer_izmerenia);
     sumX=0;
     sumY=0;
     sumZ=0;
@@ -347,6 +346,7 @@ void loop() {
     dsY=0;
     dsZ=0;
     i=0;
+
     // RS485_mode(1);
     // RS485.print(avX); RS485.print(" ");
     // RS485.print(avY); RS485.print(" ");
