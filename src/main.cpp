@@ -281,8 +281,10 @@ void loop() {
     else if(cmd=='n'){
       RS485_mode(1);
       RS485.print(accXangle); RS485.print(" ");
-      RS485.print(accYangle); RS485.print(" ");
-      RS485.print(accZangle); RS485.print(" ");
+      RS485.print(accX); RS485.print(" ");
+      RS485.print(temp); RS485.print(" ");
+      RS485.print(kalAngleX); RS485.print(" ");
+      RS485.print(nomer_izmerenia); RS485.print(" ");
       RS485.println();
       flag = 0;
       RS485_mode(0);
