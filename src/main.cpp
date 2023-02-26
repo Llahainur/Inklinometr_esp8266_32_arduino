@@ -94,12 +94,12 @@ float accXangle; // Angle calculate using the accelerometer
 float accYangle;
 float accZangle;
 float temp;
-float gyroXangle = 180; // Angle calculate using the gyro
-float gyroYangle = 180;
-float gyroZangle = 180;
-float compAngleX = 180; // Calculate the angle using a Kalman filter
-float compAngleY = 180;
-float compAngleZ = 180;
+float gyroXangle = 0; // Angle calculate using the gyro
+float gyroYangle = 0;
+float gyroZangle = 0;
+float compAngleX = 0; // Calculate the angle using a Kalman filter
+float compAngleY = 0;
+float compAngleZ = 0;
 float kalAngleX; // Calculate the angle using a Kalman filter
 float kalAngleY;
 float kalAngleZ;
