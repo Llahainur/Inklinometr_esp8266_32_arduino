@@ -95,12 +95,12 @@ float accXangle; // Angle calculate using the accelerometer
 float accYangle;
 float accZangle;
 float temp;
-float gyroXangle = 180; // Angle calculate using the gyro
-float gyroYangle = 180;
-float gyroZangle = 180;
-float compAngleX = 180; // Calculate the angle using a Kalman filter
-float compAngleY = 180;
-float compAngleZ = 180;
+float gyroXangle = 0; // Angle calculate using the gyro
+float gyroYangle = 0;
+float gyroZangle = 0;
+float compAngleX = 0; // Calculate the angle using a Kalman filter
+float compAngleY = 0;
+float compAngleZ = 0;
 float kalAngleX; // Calculate the angle using a Kalman filter
 float kalAngleY;
 float kalAngleZ;
@@ -120,8 +120,6 @@ float dsY;
 float dsZ;
 int i=0;
 int nomer_izmerenia = 0;
-
-
 
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
@@ -190,9 +188,13 @@ void setup() {
   RS485_mode(0);
   #endif
   
-  kalmanX.setAngle(0); // Set starting angle
-  kalmanY.setAngle(0);
-  kalmanZ.setAngle(0);
+  getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
+  calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
+  gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
+  Serial.println(accXangle);
+  kalmanX.setAngle(accXangle); // Set starting angle
+  kalmanY.setAngle(accYangle);
+  kalmanZ.setAngle(accZangle);
   // kalmanX.setQbias(Q_bias);
   // kalmanY.setQbias(Q_bias);
   // kalmanZ.setQbias(Q_bias);
@@ -271,9 +273,9 @@ void loop() {
     if(cmd=='g'){
       RS485_mode(1);
       RS485.print(timer/1000000); RS485.print(" ");
-      RS485.print(avX); RS485.print(" ");
-      RS485.print(avY); RS485.print(" ");
-      RS485.print(avZ); RS485.print(" ");
+      RS485.print(avX,4); RS485.print(" ");
+      RS485.print(avY,4); RS485.print(" ");
+      RS485.print(avZ,4); RS485.print(" ");
       RS485.println();
       flag = 0;
       RS485_mode(0);
@@ -329,6 +331,7 @@ void loop() {
   dsY+=abs(kalAngleY-avY);
   dsZ+=abs(kalAngleZ-avZ);
   i++;
+
   if(i == count){  
     nomer_izmerenia++;
     avX = sumX/count;
@@ -337,10 +340,10 @@ void loop() {
     dX = dsX/count;
     dY = dsY/count;
     dZ = dsZ/count;
-  // Serial.print(kalAngleX,4);Serial.print(" ");
-  // Serial.print(dsX,4);Serial.print(" ");
-  // Serial.print(avX,4); Serial.print(" "); 
-  // Serial.println(nomer_izmerenia);
+    Serial.print(kalAngleX,4);Serial.print(" ");
+    Serial.print(dsX,4);Serial.print(" ");
+    Serial.print(avX,4); Serial.print(" "); 
+    Serial.println(nomer_izmerenia);
     sumX=0;
     sumY=0;
     sumZ=0;
