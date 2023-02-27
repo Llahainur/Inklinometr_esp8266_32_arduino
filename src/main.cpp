@@ -156,7 +156,7 @@ void setup() {
   // pinMode(RE, OUTPUT);
   // pinMode(DE, OUTPUT);
 
-  Serial.begin(9600);
+  Serial.begin(4800);
   Wire.begin();
   Wire.beginTransmission(IMUAddress);
   Wire.write(0x6B);  // PWR_MGMT_1 register
@@ -172,14 +172,14 @@ void setup() {
 
   #endif
   
-  getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
-  calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
-  gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
+  // getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
+  // calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
+  // gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
 
   //Serial.println(accXangle);
-  kalmanX.setAngle(accXangle); // Set starting angle
-  kalmanY.setAngle(accYangle);
-  kalmanZ.setAngle(accZangle);
+  kalmanX.setAngle(0); // Set starting angle
+  kalmanY.setAngle(0);
+  kalmanZ.setAngle(0);
   // kalmanX.setQbias(Q_bias);
   // kalmanY.setQbias(Q_bias);
   // kalmanZ.setQbias(Q_bias);
@@ -220,8 +220,9 @@ void setup() {
 #endif
 
   mpu.setFullScaleAccelRange(3);//-2..2 g/s
-  //mpu.setFullScaleAccelRange(0);//-16..16 g/s // вернуть, если что-то с погрешностью пойдет не так
+  ////mpu.setFullScaleAccelRange(0);//-16..16 g/s // вернуть, если что-то с погрешностью пойдет не так
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
+  //Serial.println("INIT_DONE");
 }
 
 void loop() {
@@ -309,8 +310,11 @@ void loop() {
   //if(Serial.available()>0){Serial.println(Serial.available());}
 
   if (Serial.available() > 0){
+    
     for(int i = 0; i < len; i++){
       data[i] = Serial.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
+      //Serial.print(data[i]);
+      //Serial.println(' ');
       if (i<len-1){
         if(addr[i]!=data[i]){;
           flag = 0;
@@ -357,6 +361,10 @@ void loop() {
       print_addr();Serial.println();
       flag = 0;
       // RS485_mode(0);
+    }
+    else{
+      //Serial.print("err ");
+      Serial.println(cmd);
     }
     }
     }
