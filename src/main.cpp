@@ -256,60 +256,7 @@ void loop() {
   bool flag=1;
   int const len=4;
  
-  // RS485_mode(0);
-  if (RS485.available() > 0){
-    for(int i = 0; i < len; i++){
-      data[i] = RS485.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
-      if (i<len-1){
-        if(addr[i]!=data[i]){;
-          flag = 0;
-        }
-      }
-      if(i==len-1){
-        cmd=data[i];
-      }
-    }
-    if (flag){
-    if(cmd=='g'){
-      RS485_mode(1);
-      RS485.print(timer/1000000); RS485.print(" ");
-      RS485.print(avX,4); RS485.print(" ");
-      RS485.print(avY,4); RS485.print(" ");
-      RS485.print(avZ,4); RS485.print(" ");
-      RS485.println();
-      flag = 0;
-      RS485_mode(0);
-    }
-    else if(cmd=='n'){
-      RS485_mode(1);
-      RS485.print(accXangle); RS485.print(" ");
-      RS485.print(accX); RS485.print(" ");
-      RS485.print(temp); RS485.print(" ");
-      RS485.print(kalAngleX); RS485.print(" ");
-      RS485.print(nomer_izmerenia); RS485.print(" ");
-      RS485.println();
-      flag = 0;
-      RS485_mode(0);
-      }
-    else if (cmd=='c'){
-      RS485_mode(1);
-      RS485.println("CALIBRAION");
-      print_addr();RS485.println();
-      Calibrate(mpu);
-      flag = 0;
-      RS485_mode(0);
-    }
-    else if (cmd=='i'){
-      RS485_mode(1);
-      i2c_test(RS485);
-      print_addr();RS485.println();
-      flag = 0;
-      RS485_mode(0);
-    }
-    }
-    }
-    
-  #endif
+
   
 
 
@@ -380,6 +327,60 @@ void loop() {
 
   #endif
   }
+      // RS485_mode(0);
+  if (RS485.available() > 0){
+    for(int i = 0; i < len; i++){
+      data[i] = RS485.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
+      if (i<len-1){
+        if(addr[i]!=data[i]){;
+          flag = 0;
+        }
+      }
+      if(i==len-1){
+        cmd=data[i];
+      }
+    }
+    if (flag){
+    if(cmd=='g'){
+      RS485_mode(1);
+      RS485.print(timer/1000000); RS485.print(" ");
+      RS485.print(avX,4); RS485.print(" ");
+      RS485.print(avY,4); RS485.print(" ");
+      RS485.print(avZ,4); RS485.print(" ");
+      RS485.println();
+      flag = 0;
+      RS485_mode(0);
+    }
+    else if(cmd=='n'){
+      RS485_mode(1);
+      RS485.print(accXangle); RS485.print(" ");
+      RS485.print(accX); RS485.print(" ");
+      RS485.print(temp); RS485.print(" ");
+      RS485.print(kalAngleX); RS485.print(" ");
+      RS485.print(nomer_izmerenia); RS485.print(" ");
+      RS485.println();
+      flag = 0;
+      RS485_mode(0);
+      }
+    else if (cmd=='c'){
+      RS485_mode(1);
+      RS485.println("CALIBRAION");
+      print_addr();RS485.println();
+      Calibrate(mpu);
+      flag = 0;
+      RS485_mode(0);
+    }
+    else if (cmd=='i'){
+      RS485_mode(1);
+      i2c_test(RS485);
+      print_addr();RS485.println();
+      flag = 0;
+      RS485_mode(0);
+    }
+    }
+    }
+    
+  #endif
   delay(1); // The accelerometer's maximum samples rate is 1kHz
 }
 
