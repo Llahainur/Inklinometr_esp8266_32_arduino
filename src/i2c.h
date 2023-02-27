@@ -3,3 +3,5 @@
 #include <RS485.h>
 
 void i2c_test(SoftwareSerial RS485);
+
+void i2c_test();

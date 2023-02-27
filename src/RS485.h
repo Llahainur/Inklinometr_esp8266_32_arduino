@@ -6,4 +6,4 @@
 #define RE 10 //Receiver Enable
 #define DE 11 //Driver Enable     
 
-void RS485_mode(bool mode);
+//void RS485_mode(bool mode);

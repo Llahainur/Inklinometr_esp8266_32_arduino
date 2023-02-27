@@ -127,21 +127,6 @@ int16_t gx, gy, gz;
 
 using namespace vals;
 
-// /////получить углы///////////////////////
-// void getAngleCmd(const char *arg) {
-//   if (arg[1] == ADDR){
-//     RS485_mode(1,RE,DE);
-//     Serial.println(ADDR);//убрать в релизе
-//     Serial.print(avX); Serial.print(" ");
-//     Serial.print(avY); Serial.print(" ");
-//     Serial.print(avZ); Serial.print(" ");
-//     Serial.println();
-//     RS485_mode(0,RE,DE);
-//   }
-// }
-
-
-
 // ======= ХЭНДЛЕР КАЛИБРОВКИ =======
 void handle_onCalibrate() {
   Calibrate(mpu);
@@ -163,13 +148,13 @@ void handle_OnConnect(){
 void print_addr(){
   int ar[3]=ADDR_ARR;
   //RS485.print("address: ");
-  for(int i=0;i<3;i++){RS485.write(ar[i]);}
+  for(int i=0;i<3;i++){Serial.write(ar[i]);}
   //RS485.println();
 };
 
 void setup() {
-  pinMode(RE, OUTPUT);
-  pinMode(DE, OUTPUT);
+  // pinMode(RE, OUTPUT);
+  // pinMode(DE, OUTPUT);
 
   Serial.begin(9600);
   Wire.begin();
@@ -177,21 +162,21 @@ void setup() {
   Wire.write(0x6B);  // PWR_MGMT_1 register
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
-  Serial.println("INIT");
+  //Serial.println("INIT");
 
   #ifdef WIRED
-  //cmdline.begin(commands, sizeof(commands));
-  RS485.begin(115200);//запускать порт с скоростью 38400. Хз почему.
-  RS485_mode(1);
-  RS485.println("INIT");
-  print_addr();RS485.println();
-  RS485_mode(0);
+
+  Serial.println("INIT");
+  print_addr();
+  Serial.println();
+
   #endif
   
   getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
   calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
   gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
-  Serial.println(accXangle);
+
+  //Serial.println(accXangle);
   kalmanX.setAngle(accXangle); // Set starting angle
   kalmanY.setAngle(accYangle);
   kalmanZ.setAngle(accZangle);
@@ -223,7 +208,7 @@ void setup() {
   Serial.println(WiFi.localIP());
 #endif
 
-  delay(100);
+  //delay(100);
 
 #ifdef SERVER
   server.on("/", handle_OnConnect);
@@ -240,6 +225,7 @@ void setup() {
 }
 
 void loop() {
+  //Serial.println("INIT");
   #ifdef SERVER
   server.handleClient();
   #endif
@@ -248,16 +234,6 @@ void loop() {
   getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
   calculateAngles(accX,accY,accZ, tempRaw,gyroX,gyroY,gyroZ,accXangle,accYangle,accZangle,temp,gyroXangle, 
   gyroYangle,gyroZangle,kalAngleX,kalAngleY,kalAngleZ,timer,kalmanX,kalmanY,kalmanZ);
-
-  #ifdef WIRED
-  char data[5];
-  char addr[3]=ADDR_ARR;
-  char cmd;
-  bool flag=1;
-  int const len=4;
- 
-
-  
 
 
   #ifndef WIRED
@@ -287,10 +263,12 @@ void loop() {
     dX = dsX/count;
     dY = dsY/count;
     dZ = dsZ/count;
-    Serial.print(kalAngleX,4);Serial.print(" ");
-    Serial.print(dsX,4);Serial.print(" ");
-    Serial.print(avX,4); Serial.print(" "); 
-    Serial.println(nomer_izmerenia);
+
+    // Serial.print(avX,4); Serial.print(" ");
+    // Serial.print(avY,4); Serial.print(" ");
+    // Serial.print(avZ,4); Serial.print(" ");
+    // Serial.println();
+
     sumX=0;
     sumY=0;
     sumZ=0;
@@ -298,13 +276,6 @@ void loop() {
     dsY=0;
     dsZ=0;
     i=0;
-
-    // RS485_mode(1);
-    // RS485.print(avX); RS485.print(" ");
-    // RS485.print(avY); RS485.print(" ");
-    // RS485.print(avZ); RS485.print(" ");
-    // RS485.println();
-    // RS485_mode(0);
 
   #ifdef CLIENT
       WiFiClient client;
@@ -327,10 +298,19 @@ void loop() {
 
   #endif
   }
-      // RS485_mode(0);
-  if (RS485.available() > 0){
+
+  #ifdef WIRED
+  char data[5];
+  char addr[3]=ADDR_ARR;
+  char cmd;
+  bool flag=1;
+  int const len=4;
+
+  //if(Serial.available()>0){Serial.println(Serial.available());}
+
+  if (Serial.available() > 0){
     for(int i = 0; i < len; i++){
-      data[i] = RS485.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
+      data[i] = Serial.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
       if (i<len-1){
         if(addr[i]!=data[i]){;
           flag = 0;
@@ -342,40 +322,41 @@ void loop() {
     }
     if (flag){
     if(cmd=='g'){
-      RS485_mode(1);
-      RS485.print(timer/1000000); RS485.print(" ");
-      RS485.print(avX,4); RS485.print(" ");
-      RS485.print(avY,4); RS485.print(" ");
-      RS485.print(avZ,4); RS485.print(" ");
-      RS485.println();
+      // RS485_mode(1);
+      Serial.print(timer/1000000); Serial.print(" ");
+      Serial.print(avX,4); Serial.print(" ");
+      Serial.print(avY,4); Serial.print(" ");
+      Serial.print(avZ,4); Serial.print(" ");
+      Serial.println();
       flag = 0;
-      RS485_mode(0);
+      // RS485_mode(0);
     }
     else if(cmd=='n'){
-      RS485_mode(1);
-      RS485.print(accXangle); RS485.print(" ");
-      RS485.print(accX); RS485.print(" ");
-      RS485.print(temp); RS485.print(" ");
-      RS485.print(kalAngleX); RS485.print(" ");
-      RS485.print(nomer_izmerenia); RS485.print(" ");
-      RS485.println();
+      // RS485_mode(1);
+      Serial.print("accxAng ");
+      Serial.print(accXangle);  Serial.print(" accX ");
+      Serial.print(accX);       Serial.print(" accY ");
+      Serial.print(accY);       Serial.print(" kalmX ");
+      Serial.print(kalAngleX);  Serial.print(" N ");
+      Serial.print(nomer_izmerenia); Serial.print(" ");
+      Serial.println();
       flag = 0;
-      RS485_mode(0);
+      // RS485_mode(0);
       }
     else if (cmd=='c'){
-      RS485_mode(1);
-      RS485.println("CALIBRAION");
-      print_addr();RS485.println();
+      // RS485_mode(1);
+      Serial.println("CALIBRAION");
+      print_addr();Serial.println();
       Calibrate(mpu);
       flag = 0;
-      RS485_mode(0);
+      // RS485_mode(0);
     }
     else if (cmd=='i'){
-      RS485_mode(1);
-      i2c_test(RS485);
-      print_addr();RS485.println();
+      // RS485_mode(1);
+      i2c_test();
+      print_addr();Serial.println();
       flag = 0;
-      RS485_mode(0);
+      // RS485_mode(0);
     }
     }
     }
