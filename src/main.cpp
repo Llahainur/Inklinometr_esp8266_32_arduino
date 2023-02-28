@@ -10,6 +10,7 @@
 //or
 //#define WIFI_CLI //если датчик - клиент другой сети
 #endif
+//#define NOCMD
 
 const int count=1000;// количество измерений, от которых берется среднее
 
@@ -153,10 +154,12 @@ void print_addr(){
 };
 
 void setup() {
-  // pinMode(RE, OUTPUT);
-  // pinMode(DE, OUTPUT);
+  
+  pinMode(RE, OUTPUT);
+  pinMode(DE, OUTPUT);
 
-  Serial.begin(4800);
+  Serial.begin(9600);//для serial, 2400
+  //Serial.begin(2400);//для rs
   Wire.begin();
   Wire.beginTransmission(IMUAddress);
   Wire.write(0x6B);  // PWR_MGMT_1 register
@@ -165,11 +168,9 @@ void setup() {
   //Serial.println("INIT");
 
   #ifdef WIRED
-
+  RS485_mode(1);
+  delay(5);
   Serial.println("INIT");
-  print_addr();
-  Serial.println();
-
   #endif
   
   // getValues(accX,accY,accZ,tempRaw,gyroX,gyroY,gyroZ,temp,IMUAddress);
@@ -223,10 +224,16 @@ void setup() {
   ////mpu.setFullScaleAccelRange(0);//-16..16 g/s // вернуть, если что-то с погрешностью пойдет не так
   mpu.setFullScaleGyroRange(0);//-250..250 deg/sec
   //Serial.println("INIT_DONE");
+
+  print_addr();
+  Serial.println();
+  RS485_mode(0);
 }
 
 void loop() {
-  //Serial.println("INIT");
+  RS485_mode(1);
+  Serial.println("INIT");
+  RS485_mode(0);
   #ifdef SERVER
   server.handleClient();
   #endif
@@ -264,11 +271,16 @@ void loop() {
     dX = dsX/count;
     dY = dsY/count;
     dZ = dsZ/count;
+    #ifdef NOCMD
+    RS485_mode(1);
+    Serial.print(timer/1000000,0); Serial.print(" ");
+    Serial.print(avX,4); Serial.print(" ");
+    Serial.print(avY,4); Serial.print(" ");
+    Serial.print(avZ,4); Serial.print(" ");
+    Serial.println();
 
-    // Serial.print(avX,4); Serial.print(" ");
-    // Serial.print(avY,4); Serial.print(" ");
-    // Serial.print(avZ,4); Serial.print(" ");
-    // Serial.println();
+    RS485_mode(0);
+    #endif
 
     sumX=0;
     sumY=0;
@@ -307,7 +319,7 @@ void loop() {
   bool flag=1;
   int const len=4;
 
-  //if(Serial.available()>0){Serial.println(Serial.available());}
+  //if(Serial.available()>0){Serial.println("got");}
 
   if (Serial.available() > 3){
     for(int i = 0; i < len; i++){
@@ -316,25 +328,27 @@ void loop() {
       if (i<len-1){
         if(addr[i]!=data[i]){;
           flag = 0;
+          Serial.print(data[i]);
         }
       }
       if(i==len-1){
         cmd=data[i];
+        //Serial.println(cmd);
       }
     }
     if (flag){
     if(cmd=='g'){
-      // RS485_mode(1);
+      RS485_mode(1);
       Serial.print(timer/1000000); Serial.print(" ");
       Serial.print(avX,4); Serial.print(" ");
       Serial.print(avY,4); Serial.print(" ");
       Serial.print(avZ,4); Serial.print(" ");
       Serial.println();
       flag = 0;
-      // RS485_mode(0);
+      RS485_mode(0);
     }
     else if(cmd=='n'){
-      // RS485_mode(1);
+      RS485_mode(1);
       Serial.print("accxAng ");
       Serial.print(accXangle);  Serial.print(" accX ");
       Serial.print(accX);       Serial.print(" accY ");
@@ -343,47 +357,40 @@ void loop() {
       Serial.print(nomer_izmerenia); Serial.print(" ");
       Serial.println();
       flag = 0;
-      // RS485_mode(0);
+      RS485_mode(0);
       }
       else if(cmd=='p'){
-      // RS485_mode(1);
+      RS485_mode(1);
       Serial.print("ping ");
       print_addr();
       Serial.println();
       flag = 0;
-      // RS485_mode(0);
+      RS485_mode(0);
       }
     else if (cmd=='c'){
-      // RS485_mode(1);
+      RS485_mode(1);
       Serial.println("CALIBRAION");
       print_addr();Serial.println();
       Calibrate(mpu);
       flag = 0;
-      // RS485_mode(0);
+      RS485_mode(0);
     }
     else if (cmd=='i'){
-      // RS485_mode(1);
+      RS485_mode(1);
       i2c_test();
       print_addr();
       Serial.println();
       flag = 0;
-      // RS485_mode(0);
+      RS485_mode(0);
     }
     else{
+      RS485_mode(1);
       Serial.println("input error ");
       Serial.print(cmd);
+      RS485_mode(0);
     }
     }
     }
-    // else if (Serial.available()<3 and Serial.available()>0)
-    // {
-    //   /* code */
-    // }
-    
-  // else if(Serial.available()>0 and Serial.available()<3){
-  //   Serial.println("again plz");
-  //   Serial.readString();      
-  //  }
     
   #endif
   delay(1); // The accelerometer's maximum samples rate is 1kHz
