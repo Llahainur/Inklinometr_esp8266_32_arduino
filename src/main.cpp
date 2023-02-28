@@ -312,8 +312,7 @@ void loop() {
   if (Serial.available() > 3){
     for(int i = 0; i < len; i++){
       data[i] = Serial.read();//пакет - 4 буквы. Первые 3 - адрес, последняя - команда. 
-      //Serial.print(data[i]);
-      //Serial.println(' ');
+      
       if (i<len-1){
         if(addr[i]!=data[i]){;
           flag = 0;
@@ -346,7 +345,7 @@ void loop() {
       flag = 0;
       // RS485_mode(0);
       }
-      else if(cmd=='f'){
+      else if(cmd=='p'){
       // RS485_mode(1);
       Serial.print("ping ");
       print_addr();
@@ -371,17 +370,20 @@ void loop() {
       // RS485_mode(0);
     }
     else{
-      Serial.println(cmd);
+      Serial.println("input error ");
+      Serial.print(cmd);
     }
     }
     }
-    else if(Serial.available()>0){
-      delay(10);
-      Serial.print('>');
-    }
-    // else{
-      
+    // else if (Serial.available()<3 and Serial.available()>0)
+    // {
+    //   /* code */
     // }
+    
+  // else if(Serial.available()>0 and Serial.available()<3){
+  //   Serial.println("again plz");
+  //   Serial.readString();      
+  //  }
     
   #endif
   delay(1); // The accelerometer's maximum samples rate is 1kHz
