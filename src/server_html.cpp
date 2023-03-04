@@ -33,14 +33,14 @@ float noizeY, float noizeZ, float temp){
   ptr+=y;
   ptr+="  ";
   ptr+=z;
-  ptr+="  ";
-  ptr+=noizeX;
-   ptr+="  ";
-  ptr+=noizeY;
-   ptr+="  ";
-  ptr+=noizeZ;
-  ptr+="  ";
-  ptr+=temp;
+  // ptr+="  ";
+  // ptr+=noizeX;
+  //  ptr+="  ";
+  // ptr+=noizeY;
+  //  ptr+="  ";
+  // ptr+=noizeZ;
+  // ptr+="  ";
+  // ptr+=temp;
   ptr+="";
   return ptr;
 }
