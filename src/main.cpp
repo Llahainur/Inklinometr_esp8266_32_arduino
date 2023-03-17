@@ -175,8 +175,12 @@ void setup() {
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+    
 #endif
-
+  // uint8_t val = (20.5);
+  // WiFi.setOutputPower(val*40.0f);
+  WiFi.setAutoConnect(true);
+  
   delay(100);
 
 #ifdef SERVER
